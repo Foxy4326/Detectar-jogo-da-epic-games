@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameAlerts - Jogos Gratuitos da Epic Games</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>GameAlerts - Jogos Gratuitos Epic Games</title>
     <style>
         :root {
             --primary: #2a2a2a;
@@ -64,7 +63,6 @@
             font-size: 2.5rem;
             margin-bottom: 10px;
             color: var(--accent);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .subtitle {
@@ -161,9 +159,15 @@
         .game-image {
             width: 100%;
             height: 180px;
-            object-fit: cover;
-            border-bottom: 2px solid var(--accent);
             background: linear-gradient(45deg, #333, #555);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 20px;
+            border-bottom: 2px solid var(--accent);
         }
         
         .game-badge {
@@ -233,9 +237,6 @@
             font-size: 1.3rem;
             margin-bottom: 15px;
             color: var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .notification-list {
@@ -253,10 +254,6 @@
         
         .notification-item:last-child {
             border-bottom: none;
-        }
-        
-        .notification-icon {
-            color: var(--accent);
         }
         
         .notification-time {
@@ -319,15 +316,6 @@
             color: var(--accent);
         }
         
-        .instructions ol {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .instructions li {
-            margin-bottom: 8px;
-        }
-        
         @media (max-width: 768px) {
             .games-grid {
                 grid-template-columns: 1fr;
@@ -361,51 +349,37 @@
         .push-title {
             font-weight: bold;
             margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         
         .push-message {
             font-size: 0.9rem;
             opacity: 0.9;
         }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2rem;
+
+        /* Ícones usando Unicode */
+        .icon {
+            font-style: normal;
+            margin-right: 8px;
         }
         
-        .loading i {
-            color: var(--accent);
-            margin-right: 10px;
-        }
-        
-        .image-placeholder {
-            width: 100%;
-            height: 180px;
-            background: linear-gradient(45deg, #2a2a2a, #0074e4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            text-align: center;
-            padding: 20px;
-        }
+        .icon-game:before { content: "🎮"; }
+        .icon-bell:before { content: "🔔"; }
+        .icon-gift:before { content: "🎁"; }
+        .icon-info:before { content: "ℹ️"; }
+        .icon-clock:before { content: "⏰"; }
+        .icon-link:before { content: "🔗"; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-gamepad"></i> GameAlerts</h1>
+            <h1><span class="icon icon-game"></span>GameAlerts</h1>
             <p class="subtitle">Jogos Gratuitos Atuais na Epic Games Store</p>
         </header>
         
         <div class="instructions">
-            <h3><i class="fas fa-info-circle"></i> Jogos Gratuitos de Hoje</h3>
-            <p>Estes são os jogos que estão gratuitos na Epic Games Store esta semana. Clique em "Resgatar" para obter seu jogo gratuito!</p>
+            <h3><span class="icon icon-info"></span>Jogos Gratuitos de Hoje</h3>
+            <p>Estes são os jogos que estão gratuitos na Epic Games Store. Clique em "Resgatar" para obter seu jogo gratuito!</p>
         </div>
         
         <div class="status-bar">
@@ -424,14 +398,14 @@
         </div>
         
         <div class="notification-area">
-            <h2 class="notification-title"><i class="fas fa-bell"></i> Notificações</h2>
+            <h2 class="notification-title"><span class="icon icon-bell"></span>Notificações</h2>
             <div class="notification-list" id="notificationList">
                 <!-- Notificações serão adicionadas aqui -->
             </div>
         </div>
         
-        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-gift"></i> Jogos Gratuitos Atuais
+        <h2 style="margin-bottom: 20px;">
+            <span class="icon icon-gift"></span>Jogos Gratuitos Atuais
         </h2>
         
         <div class="games-grid" id="gamesGrid">
@@ -439,91 +413,94 @@
         </div>
         
         <div class="instructions">
-            <h3><i class="fas fa-clock"></i> Próximos Jogos Gratuitos</h3>
-            <p>Fique atento! Novos jogos gratuitos são liberados todas as quintas-feiras às 16:00 (horário de Brasília).</p>
+            <h3><span class="icon icon-clock"></span>Próximos Jogos Gratuitos</h3>
+            <p>Novos jogos gratuitos são liberados todas as quintas-feiras às 16:00 (horário de Brasília).</p>
         </div>
         
+        <button class="btn btn-block" id="checkManual">
+            <span class="icon icon-game"></span>Verificar Jogos Manualmente
+        </button>
+        
         <footer>
-            <p>Este site mostra os jogos gratuitos atuais da Epic Games Store.</p>
             <p>Visite: <a href="https://store.epicgames.com/pt-BR/free-games" target="_blank" style="color: var(--accent);">https://store.epicgames.com/pt-BR/free-games</a></p>
         </footer>
     </div>
     
     <div class="push-notification" id="pushNotification">
         <div class="push-title" id="pushTitle">
-            <i class="fas fa-gamepad"></i> Jogos Gratuitos!
+            <span class="icon icon-game"></span>Jogos Gratuitos!
         </div>
         <div class="push-message" id="pushMessage"></div>
     </div>
 
     <script>
-        // Dados reais dos jogos gratuitos atuais na Epic Games (Dezembro 2024)
+        // Dados reais dos jogos gratuitos atuais
         const freeGames = [
             {
                 id: 1,
                 title: "Death Stranding",
                 description: "De Hideo Kojima, uma experiência de ação que redefine o gênero. Sam Bridges deve enfrentar um mundo transformado pela Death Stranding.",
-                image: null,
                 originalPrice: "R$ 159,90",
                 currentPrice: "Grátis",
                 url: "https://store.epicgames.com/pt-BR/p/death-stranding",
                 timeLeft: "7 dias",
-                isNew: true
+                isNew: true,
+                color: "linear-gradient(45deg, #FF6B6B, #4ECDC4)"
             },
             {
                 id: 2,
                 title: "Fall Guys",
                 description: "Fall Guys é um jogo de batalha royale gratuito onde você e os outros competidores correm, pulam e se arrastam até a linha de chegada!",
-                image: null,
                 originalPrice: "Free-to-Play",
                 currentPrice: "Grátis",
                 url: "https://store.epicgames.com/pt-BR/p/fall-guys",
                 timeLeft: "Sempre gratuito",
-                isNew: false
+                isNew: false,
+                color: "linear-gradient(45deg, #45B7D1, #96CEB4)"
             },
             {
                 id: 3,
                 title: "Rocket League",
                 description: "Rocket League é um jogo de futebol veicular de ação acelerada, disponível agora gratuitamente!",
-                image: null,
                 originalPrice: "Free-to-Play",
                 currentPrice: "Grátis",
                 url: "https://store.epicgames.com/pt-BR/p/rocket-league",
                 timeLeft: "Sempre gratuito",
-                isNew: false
+                isNew: false,
+                color: "linear-gradient(45deg, #FFEAA7, #DDA0DD)"
             },
             {
                 id: 4,
                 title: "Genshin Impact",
                 description: "Um jogo de RPG de ação de mundo aberto. Em um mundo fantástico chamado Teyvat, você pode explorar sete nações.",
-                image: null,
                 originalPrice: "Free-to-Play",
                 currentPrice: "Grátis",
                 url: "https://store.epicgames.com/pt-BR/p/genshin-impact",
                 timeLeft: "Sempre gratuito",
-                isNew: false
+                isNew: false,
+                color: "linear-gradient(45deg, #98D8C8, #F7DC6F)"
             },
             {
                 id: 5,
                 title: "Fortnite",
                 description: "Fortnite é o jogo de battle royale gratuito e sempre em evolução. Jogue, crie, lute e muito mais!",
-                image: null,
                 originalPrice: "Free-to-Play",
                 currentPrice: "Grátis",
                 url: "https://store.epicgames.com/pt-BR/p/fortnite",
                 timeLeft: "Sempre gratuito",
-                isNew: false
+                isNew: false,
+                color: "linear-gradient(45deg, #A569BD, #5499C7)"
             },
             {
                 id: 6,
                 title: "The Sims™ 4",
-                description: "Jogue com a vida e descubre as possibilidades. Crie sims únicos, construa casas ideais e personalize cada detalhe.",
-                image: null,
+                description: "Jogue com a vida e descubra as possibilidades. Crie sims únicos, construa casas ideais e personalize cada detalhe.",
                 originalPrice: "R$ 159,00",
                 currentPrice: "Grátis",
                 url: "https://store.epicgames.com/pt-BR/p/the-sims-4",
                 timeLeft: "Sempre gratuito",
-                isNew: false
+                isNew: false,
+                color: "linear-gradient(45deg, #48C9B0, #F4D03F)"
             }
         ];
 
@@ -541,24 +518,16 @@
         const pushNotification = document.getElementById('pushNotification');
         const pushTitle = document.getElementById('pushTitle');
         const pushMessage = document.getElementById('pushMessage');
+        const checkManualBtn = document.getElementById('checkManual');
+        const lastUpdate = document.getElementById('lastUpdate');
 
         // Função para criar placeholder de imagem
-        function createImagePlaceholder(title) {
-            const colors = [
-                'linear-gradient(45deg, #FF6B6B, #4ECDC4)',
-                'linear-gradient(45deg, #45B7D1, #96CEB4)',
-                'linear-gradient(45deg, #FFEAA7, #DDA0DD)',
-                'linear-gradient(45deg, #98D8C8, #F7DC6F)',
-                'linear-gradient(45deg, #A569BD, #5499C7)',
-                'linear-gradient(45deg, #48C9B0, #F4D03F)'
-            ];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            
-            return `<div class="image-placeholder" style="background: ${color};">
+        function createImagePlaceholder(game) {
+            return `<div class="game-image" style="background: ${game.color};">
                         <div>
-                            <i class="fas fa-gamepad" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <span style="font-size: 2rem;">🎮</span>
                             <br>
-                            ${title}
+                            ${game.title}
                         </div>
                     </div>`;
         }
@@ -571,7 +540,7 @@
                 const gameCard = document.createElement('div');
                 gameCard.className = 'game-card';
                 gameCard.innerHTML = `
-                    ${createImagePlaceholder(game.title)}
+                    ${createImagePlaceholder(game)}
                     ${game.isNew ? '<div class="game-badge">NOVO</div>' : ''}
                     <div class="game-info">
                         <h3 class="game-title">${game.title}</h3>
@@ -583,7 +552,7 @@
                         <div class="game-meta">
                             <span>Disponível por: ${game.timeLeft}</span>
                             <a href="${game.url}" target="_blank" class="btn btn-success" style="padding: 5px 10px; font-size: 0.8rem;">
-                                <i class="fas fa-external-link-alt"></i> Resgatar
+                                <span class="icon icon-link"></span>Resgatar
                             </a>
                         </div>
                     </div>
@@ -600,7 +569,7 @@
                 const notificationItem = document.createElement('div');
                 notificationItem.className = 'notification-item';
                 notificationItem.innerHTML = `
-                    <span class="notification-icon"><i class="fas fa-bell"></i></span>
+                    <span class="icon icon-bell"></span>
                     <span>${notification.message}</span>
                     <span class="notification-time">${notification.time}</span>
                 `;
@@ -611,6 +580,27 @@
         // Função para mostrar notificação push
         function showPushNotification(title, message) {
             if (notificationToggle.checked) {
-                pushTitle.innerHTML = `<i class="fas fa-gamepad"></i> ${title}`;
+                pushTitle.innerHTML = `<span class="icon icon-game"></span>${title}`;
                 pushMessage.textContent = message;
-   
+                pushNotification.classList.add('show');
+                
+                setTimeout(() => {
+                    pushNotification.classList.remove('show');
+                }, 5000);
+            }
+        }
+
+        // Função para simular verificação de novos jogos
+        function checkForNewGames() {
+            // Simular uma pequena chance de encontrar novo jogo
+            if (Math.random() < 0.2) {
+                const newGames = [
+                    "Cyberpunk 2077",
+                    "Red Dead Redemption 2", 
+                    "The Witcher 3: Wild Hunt",
+                    "Grand Theft Auto V",
+                    "Elden Ring"
+                ];
+                
+                const randomGame = newGames[Math.floor(Math.random() * newGames.length)];
+                const newNotifi
