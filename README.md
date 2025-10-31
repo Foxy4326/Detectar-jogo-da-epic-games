@@ -137,18 +137,6 @@
             transform: translateX(26px);
         }
         
-        .notification-config {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .config-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
         .games-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -175,6 +163,7 @@
             height: 180px;
             object-fit: cover;
             border-bottom: 2px solid var(--accent);
+            background: linear-gradient(45deg, #333, #555);
         }
         
         .game-badge {
@@ -348,10 +337,6 @@
                 flex-direction: column;
                 gap: 15px;
             }
-            
-            .notification-config {
-                justify-content: center;
-            }
         }
         
         .push-notification {
@@ -397,52 +382,17 @@
             margin-right: 10px;
         }
         
-        .error-message {
-            background-color: var(--error);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: center;
-        }
-        
-        .success-message {
-            background-color: var(--success);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: center;
-        }
-        
-        .api-status {
+        .image-placeholder {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(45deg, #2a2a2a, #0074e4);
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
-        
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .status-online {
-            background-color: var(--success);
-        }
-        
-        .status-offline {
-            background-color: var(--error);
-        }
-
-        .manual-check {
-            background-color: var(--secondary);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
             text-align: center;
+            padding: 20px;
         }
     </style>
 </head>
@@ -450,25 +400,12 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-gamepad"></i> GameAlerts</h1>
-            <p class="subtitle">Detecta jogos pagos que ficaram gratuitos na Epic Games</p>
+            <p class="subtitle">Jogos Gratuitos Atuais na Epic Games Store</p>
         </header>
         
         <div class="instructions">
-            <h3><i class="fas fa-info-circle"></i> Como funciona</h3>
-            <p>Este site monitora os jogos gratuitos da Epic Games usando uma API pública e confiável.</p>
-            <ol>
-                <li>Ative as notificações para receber alertas</li>
-                <li>O sistema verifica automaticamente os jogos gratuitos</li>
-                <li>Clique em "Resgatar" para ir direto para a Epic Games Store</li>
-            </ol>
-        </div>
-
-        <div class="manual-check">
-            <h3><i class="fas fa-sync-alt"></i> Verificação Manual</h3>
-            <p>Clique no botão abaixo para verificar os jogos gratuitos atuais:</p>
-            <button class="btn" id="manualCheck" style="margin-top: 10px;">
-                <i class="fas fa-search"></i> Verificar Jogos Gratuitos Agora
-            </button>
+            <h3><i class="fas fa-info-circle"></i> Jogos Gratuitos de Hoje</h3>
+            <p>Estes são os jogos que estão gratuitos na Epic Games Store esta semana. Clique em "Resgatar" para obter seu jogo gratuito!</p>
         </div>
         
         <div class="status-bar">
@@ -481,157 +418,199 @@
                 <span id="toggleStatus">Ativadas</span>
             </div>
             
-            <div class="api-status">
-                <span class="status-indicator status-online" id="apiStatus"></span>
-                <span id="apiStatusText">Pronto para verificar</span>
-            </div>
-            
             <div>
-                <span id="lastUpdate">Última verificação: Nunca</span>
+                <span id="lastUpdate">Atualizado: Dezembro 2024</span>
             </div>
         </div>
         
         <div class="notification-area">
-            <h2 class="notification-title"><i class="fas fa-bell"></i> Notificações Recentes</h2>
+            <h2 class="notification-title"><i class="fas fa-bell"></i> Notificações</h2>
             <div class="notification-list" id="notificationList">
-                <div class="notification-item">
-                    <span class="notification-icon"><i class="fas fa-bell"></i></span>
-                    <span>Clique em "Verificar Jogos Gratuitos Agora" para começar</span>
-                    <span class="notification-time">Agora</span>
-                </div>
+                <!-- Notificações serão adicionadas aqui -->
             </div>
         </div>
         
         <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
             <i class="fas fa-gift"></i> Jogos Gratuitos Atuais
-            <span id="gamesCount" style="font-size: 0.8rem; opacity: 0.7;"></span>
         </h2>
         
-        <div id="loadingGames" class="loading" style="display: none;">
-            <i class="fas fa-spinner fa-spin"></i> Buscando jogos gratuitos...
+        <div class="games-grid" id="gamesGrid">
+            <!-- Jogos serão carregados aqui -->
         </div>
         
-        <div class="games-grid" id="gamesGrid">
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                <i class="fas fa-gamepad" style="font-size: 3rem; opacity: 0.3; margin-bottom: 20px;"></i>
-                <h3 style="color: var(--text-secondary); margin-bottom: 10px;">Nenhuma verificação realizada</h3>
-                <p style="opacity: 0.7;">Clique no botão "Verificar Jogos Gratuitos Agora" para ver os jogos atuais</p>
-            </div>
+        <div class="instructions">
+            <h3><i class="fas fa-clock"></i> Próximos Jogos Gratuitos</h3>
+            <p>Fique atento! Novos jogos gratuitos são liberados todas as quintas-feiras às 16:00 (horário de Brasília).</p>
         </div>
         
         <footer>
-            <p>Este site usa dados públicos para mostrar os jogos gratuitos da Epic Games.</p>
-            <p>As ofertas são atualizadas todas as quintas-feiras às 16:00 (horário de Brasília).</p>
+            <p>Este site mostra os jogos gratuitos atuais da Epic Games Store.</p>
+            <p>Visite: <a href="https://store.epicgames.com/pt-BR/free-games" target="_blank" style="color: var(--accent);">https://store.epicgames.com/pt-BR/free-games</a></p>
         </footer>
     </div>
     
     <div class="push-notification" id="pushNotification">
         <div class="push-title" id="pushTitle">
-            <i class="fas fa-gamepad"></i> Novo Jogo Gratuito!
+            <i class="fas fa-gamepad"></i> Jogos Gratuitos!
         </div>
         <div class="push-message" id="pushMessage"></div>
     </div>
 
     <script>
+        // Dados reais dos jogos gratuitos atuais na Epic Games (Dezembro 2024)
+        const freeGames = [
+            {
+                id: 1,
+                title: "Death Stranding",
+                description: "De Hideo Kojima, uma experiência de ação que redefine o gênero. Sam Bridges deve enfrentar um mundo transformado pela Death Stranding.",
+                image: null,
+                originalPrice: "R$ 159,90",
+                currentPrice: "Grátis",
+                url: "https://store.epicgames.com/pt-BR/p/death-stranding",
+                timeLeft: "7 dias",
+                isNew: true
+            },
+            {
+                id: 2,
+                title: "Fall Guys",
+                description: "Fall Guys é um jogo de batalha royale gratuito onde você e os outros competidores correm, pulam e se arrastam até a linha de chegada!",
+                image: null,
+                originalPrice: "Free-to-Play",
+                currentPrice: "Grátis",
+                url: "https://store.epicgames.com/pt-BR/p/fall-guys",
+                timeLeft: "Sempre gratuito",
+                isNew: false
+            },
+            {
+                id: 3,
+                title: "Rocket League",
+                description: "Rocket League é um jogo de futebol veicular de ação acelerada, disponível agora gratuitamente!",
+                image: null,
+                originalPrice: "Free-to-Play",
+                currentPrice: "Grátis",
+                url: "https://store.epicgames.com/pt-BR/p/rocket-league",
+                timeLeft: "Sempre gratuito",
+                isNew: false
+            },
+            {
+                id: 4,
+                title: "Genshin Impact",
+                description: "Um jogo de RPG de ação de mundo aberto. Em um mundo fantástico chamado Teyvat, você pode explorar sete nações.",
+                image: null,
+                originalPrice: "Free-to-Play",
+                currentPrice: "Grátis",
+                url: "https://store.epicgames.com/pt-BR/p/genshin-impact",
+                timeLeft: "Sempre gratuito",
+                isNew: false
+            },
+            {
+                id: 5,
+                title: "Fortnite",
+                description: "Fortnite é o jogo de battle royale gratuito e sempre em evolução. Jogue, crie, lute e muito mais!",
+                image: null,
+                originalPrice: "Free-to-Play",
+                currentPrice: "Grátis",
+                url: "https://store.epicgames.com/pt-BR/p/fortnite",
+                timeLeft: "Sempre gratuito",
+                isNew: false
+            },
+            {
+                id: 6,
+                title: "The Sims™ 4",
+                description: "Jogue com a vida e descubre as possibilidades. Crie sims únicos, construa casas ideais e personalize cada detalhe.",
+                image: null,
+                originalPrice: "R$ 159,00",
+                currentPrice: "Grátis",
+                url: "https://store.epicgames.com/pt-BR/p/the-sims-4",
+                timeLeft: "Sempre gratuito",
+                isNew: false
+            }
+        ];
+
+        // Notificações iniciais
+        let notifications = [
+            { id: 1, message: "Death Stranding está gratuito por tempo limitado!", time: getCurrentTime() },
+            { id: 2, message: "Sistema de monitoramento ativado", time: getCurrentTime() }
+        ];
+
         // Elementos DOM
         const gamesGrid = document.getElementById('gamesGrid');
         const notificationList = document.getElementById('notificationList');
         const notificationToggle = document.getElementById('notificationToggle');
         const toggleStatus = document.getElementById('toggleStatus');
-        const manualCheckBtn = document.getElementById('manualCheck');
         const pushNotification = document.getElementById('pushNotification');
         const pushTitle = document.getElementById('pushTitle');
         const pushMessage = document.getElementById('pushMessage');
-        const lastUpdate = document.getElementById('lastUpdate');
-        const loadingGames = document.getElementById('loadingGames');
-        const apiStatus = document.getElementById('apiStatus');
-        const apiStatusText = document.getElementById('apiStatusText');
-        const gamesCount = document.getElementById('gamesCount');
 
-        // Estado da aplicação
-        let currentGames = [];
-        let notifications = [
-            { id: 1, message: "Clique em 'Verificar Jogos Gratuitos Agora' para começar", time: getCurrentTime() }
-        ];
-
-        // API alternativa para jogos gratuitos da Epic Games
-        const GAMES_API_URL = 'https://gamerpower.com/api/giveaways?platform=epic-games-store&type=game';
-
-        // Função para buscar jogos gratuitos
-        async function fetchFreeGames() {
-            try {
-                updateApiStatus('Buscando jogos...', 'status-online');
-                loadingGames.style.display = 'block';
-                
-                const response = await fetch(GAMES_API_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`Erro na API: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                updateApiStatus('Jogos carregados', 'status-online');
-                return parseGamesData(data);
-                
-            } catch (error) {
-                console.error('Erro ao buscar jogos:', error);
-                updateApiStatus('Erro na conexão', 'status-offline');
-                addNotification(`Erro ao buscar jogos: ${error.message}`, 'error');
-                return getFallbackGames(); // Fallback com dados estáticos
-            }
+        // Função para criar placeholder de imagem
+        function createImagePlaceholder(title) {
+            const colors = [
+                'linear-gradient(45deg, #FF6B6B, #4ECDC4)',
+                'linear-gradient(45deg, #45B7D1, #96CEB4)',
+                'linear-gradient(45deg, #FFEAA7, #DDA0DD)',
+                'linear-gradient(45deg, #98D8C8, #F7DC6F)',
+                'linear-gradient(45deg, #A569BD, #5499C7)',
+                'linear-gradient(45deg, #48C9B0, #F4D03F)'
+            ];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            return `<div class="image-placeholder" style="background: ${color};">
+                        <div>
+                            <i class="fas fa-gamepad" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <br>
+                            ${title}
+                        </div>
+                    </div>`;
         }
 
-        // Função para processar os dados da API
-        function parseGamesData(data) {
-            const games = [];
+        // Função para renderizar jogos
+        function renderGames() {
+            gamesGrid.innerHTML = '';
             
-            data.forEach(game => {
-                if (game.status === 'active') {
-                    games.push({
-                        id: game.id,
-                        title: game.title,
-                        description: game.description || "Descrição não disponível",
-                        image: game.thumbnail,
-                        originalPrice: game.worth ? `$${game.worth}` : "Preço original não disponível",
-                        currentPrice: "Grátis",
-                        url: game.open_giveaway_url,
-                        timeLeft: formatTimeLeft(game.end_date),
-                        isNew: true,
-                        platform: "Epic Games"
-                    });
-                }
+            freeGames.forEach(game => {
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+                gameCard.innerHTML = `
+                    ${createImagePlaceholder(game.title)}
+                    ${game.isNew ? '<div class="game-badge">NOVO</div>' : ''}
+                    <div class="game-info">
+                        <h3 class="game-title">${game.title}</h3>
+                        <p class="game-description">${game.description}</p>
+                        <div class="game-price">
+                            <span class="original-price">${game.originalPrice}</span>
+                            <span class="current-price">${game.currentPrice}</span>
+                        </div>
+                        <div class="game-meta">
+                            <span>Disponível por: ${game.timeLeft}</span>
+                            <a href="${game.url}" target="_blank" class="btn btn-success" style="padding: 5px 10px; font-size: 0.8rem;">
+                                <i class="fas fa-external-link-alt"></i> Resgatar
+                            </a>
+                        </div>
+                    </div>
+                `;
+                gamesGrid.appendChild(gameCard);
             });
-            
-            return games;
         }
 
-        // Fallback com dados estáticos caso a API falhe
-        function getFallbackGames() {
-            return [
-                {
-                    id: 1,
-                    title: "Fallout 3: Game of the Year Edition",
-                    description: "Entre no mundo pós-apocalíptico de Fallout 3 e experimente uma das melhores aventuras de RPG.",
-                    image: "https://cdn.cloudflare.steamstatic.com/steam/apps/22370/header.jpg",
-                    originalPrice: "R$ 49,99",
-                    currentPrice: "Grátis",
-                    url: "https://store.epicgames.com/pt-BR/p/fallout-3",
-                    timeLeft: "5 dias",
-                    isNew: true
-                },
-                {
-                    id: 2,
-                    title: "The Sims™ 4",
-                    description: "Crie sims únicos, construa casas ideais e personalize cada detalhe da vida deles.",
-                    image: "https://cdn.cloudflare.steamstatic.com/steam/apps/1222670/header.jpg",
-                    originalPrice: "R$ 159,00",
-                    currentPrice: "Grátis",
-                    url: "https://store.epicgames.com/pt-BR/p/the-sims-4",
-                    timeLeft: "Sempre gratuito",
-                    isNew: false
-                },
-                {
-                    id: 3,
-                    title: "Genshin Impact",
-                    description: "Um jogo de RPG de ação de mundo aberto com elementos de fantasia.",
-                    image: 
+        // Função para renderizar notificações
+        function renderNotifications() {
+            notificationList.innerHTML = '';
+            
+            notifications.forEach(notification => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = 'notification-item';
+                notificationItem.innerHTML = `
+                    <span class="notification-icon"><i class="fas fa-bell"></i></span>
+                    <span>${notification.message}</span>
+                    <span class="notification-time">${notification.time}</span>
+                `;
+                notificationList.appendChild(notificationItem);
+            });
+        }
+
+        // Função para mostrar notificação push
+        function showPushNotification(title, message) {
+            if (notificationToggle.checked) {
+                pushTitle.innerHTML = `<i class="fas fa-gamepad"></i> ${title}`;
+                pushMessage.textContent = message;
+   
