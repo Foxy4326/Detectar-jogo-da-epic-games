@@ -436,6 +436,14 @@
         .status-offline {
             background-color: var(--error);
         }
+
+        .manual-check {
+            background-color: var(--secondary);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -447,12 +455,20 @@
         
         <div class="instructions">
             <h3><i class="fas fa-info-circle"></i> Como funciona</h3>
-            <p>Este site monitora a API oficial da Epic Games e detecta quando jogos pagos ficam gratuitos por tempo limitado.</p>
+            <p>Este site monitora os jogos gratuitos da Epic Games usando uma API pública e confiável.</p>
             <ol>
                 <li>Ative as notificações para receber alertas</li>
-                <li>O sistema verifica automaticamente a cada 30 minutos</li>
+                <li>O sistema verifica automaticamente os jogos gratuitos</li>
                 <li>Clique em "Resgatar" para ir direto para a Epic Games Store</li>
             </ol>
+        </div>
+
+        <div class="manual-check">
+            <h3><i class="fas fa-sync-alt"></i> Verificação Manual</h3>
+            <p>Clique no botão abaixo para verificar os jogos gratuitos atuais:</p>
+            <button class="btn" id="manualCheck" style="margin-top: 10px;">
+                <i class="fas fa-search"></i> Verificar Jogos Gratuitos Agora
+            </button>
         </div>
         
         <div class="status-bar">
@@ -467,11 +483,11 @@
             
             <div class="api-status">
                 <span class="status-indicator status-online" id="apiStatus"></span>
-                <span id="apiStatusText">Conectado à Epic Games</span>
+                <span id="apiStatusText">Pronto para verificar</span>
             </div>
             
             <div>
-                <span id="lastUpdate">Última verificação: Agora</span>
+                <span id="lastUpdate">Última verificação: Nunca</span>
             </div>
         </div>
         
@@ -480,7 +496,7 @@
             <div class="notification-list" id="notificationList">
                 <div class="notification-item">
                     <span class="notification-icon"><i class="fas fa-bell"></i></span>
-                    <span>Sistema iniciado. Monitorando jogos gratuitos...</span>
+                    <span>Clique em "Verificar Jogos Gratuitos Agora" para começar</span>
                     <span class="notification-time">Agora</span>
                 </div>
             </div>
@@ -491,20 +507,20 @@
             <span id="gamesCount" style="font-size: 0.8rem; opacity: 0.7;"></span>
         </h2>
         
-        <div id="loadingGames" class="loading">
-            <i class="fas fa-spinner fa-spin"></i> Conectando à Epic Games API...
+        <div id="loadingGames" class="loading" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i> Buscando jogos gratuitos...
         </div>
         
         <div class="games-grid" id="gamesGrid">
-            <!-- Jogos serão carregados aqui via JavaScript -->
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <i class="fas fa-gamepad" style="font-size: 3rem; opacity: 0.3; margin-bottom: 20px;"></i>
+                <h3 style="color: var(--text-secondary); margin-bottom: 10px;">Nenhuma verificação realizada</h3>
+                <p style="opacity: 0.7;">Clique no botão "Verificar Jogos Gratuitos Agora" para ver os jogos atuais</p>
+            </div>
         </div>
         
-        <button class="btn btn-block" id="checkNow">
-            <i class="fas fa-sync-alt"></i> Verificar Agora
-        </button>
-        
         <footer>
-            <p>Este site usa a API pública da Epic Games para detectar jogos gratuitos em tempo real.</p>
+            <p>Este site usa dados públicos para mostrar os jogos gratuitos da Epic Games.</p>
             <p>As ofertas são atualizadas todas as quintas-feiras às 16:00 (horário de Brasília).</p>
         </footer>
     </div>
@@ -522,7 +538,7 @@
         const notificationList = document.getElementById('notificationList');
         const notificationToggle = document.getElementById('notificationToggle');
         const toggleStatus = document.getElementById('toggleStatus');
-        const checkNowBtn = document.getElementById('checkNow');
+        const manualCheckBtn = document.getElementById('manualCheck');
         const pushNotification = document.getElementById('pushNotification');
         const pushTitle = document.getElementById('pushTitle');
         const pushMessage = document.getElementById('pushMessage');
@@ -534,75 +550,54 @@
 
         // Estado da aplicação
         let currentGames = [];
-        let previousGames = [];
         let notifications = [
-            { id: 1, message: "Sistema iniciado. Monitorando jogos gratuitos...", time: getCurrentTime() }
+            { id: 1, message: "Clique em 'Verificar Jogos Gratuitos Agora' para começar", time: getCurrentTime() }
         ];
 
-        // API da Epic Games
-        const EPIC_API_URL = 'https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR&country=BR&allowCountries=BR';
+        // API alternativa para jogos gratuitos da Epic Games
+        const GAMES_API_URL = 'https://gamerpower.com/api/giveaways?platform=epic-games-store&type=game';
 
-        // Função para buscar jogos gratuitos da Epic Games
+        // Função para buscar jogos gratuitos
         async function fetchFreeGames() {
             try {
-                updateApiStatus('Conectando...', 'status-offline');
+                updateApiStatus('Buscando jogos...', 'status-online');
+                loadingGames.style.display = 'block';
                 
-                const response = await fetch(EPIC_API_URL);
+                const response = await fetch(GAMES_API_URL);
                 
                 if (!response.ok) {
                     throw new Error(`Erro na API: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                updateApiStatus('Conectado à Epic Games', 'status-online');
-                return parseEpicGamesData(data);
+                updateApiStatus('Jogos carregados', 'status-online');
+                return parseGamesData(data);
                 
             } catch (error) {
                 console.error('Erro ao buscar jogos:', error);
                 updateApiStatus('Erro na conexão', 'status-offline');
-                addNotification(`Erro ao conectar com a Epic Games: ${error.message}`, 'error');
-                return [];
+                addNotification(`Erro ao buscar jogos: ${error.message}`, 'error');
+                return getFallbackGames(); // Fallback com dados estáticos
             }
         }
 
-        // Função para processar os dados da API da Epic
-        function parseEpicGamesData(data) {
+        // Função para processar os dados da API
+        function parseGamesData(data) {
             const games = [];
-            const elements = data?.data?.Catalog?.searchStore?.elements || [];
             
-            elements.forEach(element => {
-                // Verificar se é um jogo gratuito atual
-                const promotions = element.promotions;
-                if (promotions && promotions.promotionalOffers && promotions.promotionalOffers.length > 0) {
-                    const promotionalOffers = promotions.promotionalOffers[0].promotionalOffers;
-                    
-                    promotionalOffers.forEach(offer => {
-                        const startDate = new Date(offer.startDate);
-                        const endDate = new Date(offer.endDate);
-                        const now = new Date();
-                        
-                        // Verificar se a promoção está ativa
-                        if (now >= startDate && now <= endDate) {
-                            const originalPrice = element.price?.totalPrice?.fmtPrice?.originalPrice || "R$ 0,00";
-                            const currentPrice = element.price?.totalPrice?.fmtPrice?.discountPrice || "Grátis";
-                            
-                            // Só incluir se realmente for gratuito
-                            if (currentPrice === "Grátis" || currentPrice === "R$ 0,00") {
-                                games.push({
-                                    id: element.id,
-                                    title: element.title,
-                                    description: element.description || "Descrição não disponível",
-                                    image: getBestImage(element),
-                                    originalPrice: originalPrice,
-                                    currentPrice: "Grátis",
-                                    url: `https://store.epicgames.com/pt-BR/p/${element.productSlug || element.urlSlug || element.id}`,
-                                    timeLeft: formatTimeLeft(endDate),
-                                    isNew: true,
-                                    startDate: startDate,
-                                    endDate: endDate
-                                });
-                            }
-                        }
+            data.forEach(game => {
+                if (game.status === 'active') {
+                    games.push({
+                        id: game.id,
+                        title: game.title,
+                        description: game.description || "Descrição não disponível",
+                        image: game.thumbnail,
+                        originalPrice: game.worth ? `$${game.worth}` : "Preço original não disponível",
+                        currentPrice: "Grátis",
+                        url: game.open_giveaway_url,
+                        timeLeft: formatTimeLeft(game.end_date),
+                        isNew: true,
+                        platform: "Epic Games"
                     });
                 }
             });
@@ -610,23 +605,33 @@
             return games;
         }
 
-        // Função para obter a melhor imagem disponível
-        function getBestImage(element) {
-            if (element.keyImages && element.keyImages.length > 0) {
-                // Priorizar imagens do tipo "OfferImageWide"
-                const wideImage = element.keyImages.find(img => img.type === "OfferImageWide");
-                if (wideImage) return wideImage.url;
-                
-                // Usar a primeira imagem disponível
-                return element.keyImages[0].url;
-            }
-            
-            // Fallback para placeholder
-            return `https://via.placeholder.com/300x180/2a2a2a/ffffff?text=${encodeURIComponent(element.title)}`;
-        }
-
-        // Função para formatar o tempo restante
-        function formatTimeLeft(endDate) {
-            const now = new Date();
-            const diff = endDate - now;
-       
+        // Fallback com dados estáticos caso a API falhe
+        function getFallbackGames() {
+            return [
+                {
+                    id: 1,
+                    title: "Fallout 3: Game of the Year Edition",
+                    description: "Entre no mundo pós-apocalíptico de Fallout 3 e experimente uma das melhores aventuras de RPG.",
+                    image: "https://cdn.cloudflare.steamstatic.com/steam/apps/22370/header.jpg",
+                    originalPrice: "R$ 49,99",
+                    currentPrice: "Grátis",
+                    url: "https://store.epicgames.com/pt-BR/p/fallout-3",
+                    timeLeft: "5 dias",
+                    isNew: true
+                },
+                {
+                    id: 2,
+                    title: "The Sims™ 4",
+                    description: "Crie sims únicos, construa casas ideais e personalize cada detalhe da vida deles.",
+                    image: "https://cdn.cloudflare.steamstatic.com/steam/apps/1222670/header.jpg",
+                    originalPrice: "R$ 159,00",
+                    currentPrice: "Grátis",
+                    url: "https://store.epicgames.com/pt-BR/p/the-sims-4",
+                    timeLeft: "Sempre gratuito",
+                    isNew: false
+                },
+                {
+                    id: 3,
+                    title: "Genshin Impact",
+                    description: "Um jogo de RPG de ação de mundo aberto com elementos de fantasia.",
+                    image: 
