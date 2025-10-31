@@ -12,7 +12,6 @@
     font-family: "Segoe UI", sans-serif;
     transition: background 0.8s;
   }
-
   header {
     text-align: center;
     padding: 30px 0;
@@ -21,16 +20,13 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     margin-bottom: 30px;
   }
-
   h1 { font-size: 2.2rem; color: #00aaff; }
   .subtitle { color: #ccc; }
-
   .games-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
   }
-
   .game-card {
     background: #1c1c1c;
     border-radius: 12px;
@@ -38,31 +34,15 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     transition: transform 0.3s;
   }
-
-  .game-card:hover {
-    transform: translateY(-6px);
-  }
-
+  .game-card:hover { transform: translateY(-6px); }
   .game-image {
     width: 100%;
     height: 160px;
     object-fit: cover;
   }
-
-  .game-info {
-    padding: 15px;
-  }
-
-  .price {
-    color: #00ff99;
-    font-weight: bold;
-  }
-
-  .original {
-    text-decoration: line-through;
-    color: #999;
-  }
-
+  .game-info { padding: 15px; }
+  .price { color: #00ff99; font-weight: bold; }
+  .original { text-decoration: line-through; color: #999; }
   .btn {
     background: #0074e4;
     border: none;
@@ -73,22 +53,18 @@
     transition: 0.3s;
     font-weight: bold;
   }
-
   .btn:hover { background: #005bb5; }
-
   footer {
     text-align: center;
     margin-top: 30px;
     color: #aaa;
   }
-
   .loading {
     text-align: center;
     font-size: 1.2rem;
     color: #bbb;
     margin-top: 40px;
   }
-
   .notification {
     position: fixed;
     top: 20px;
@@ -103,9 +79,7 @@
     transition: transform 0.5s ease;
     z-index: 9999;
   }
-  .notification.show {
-    transform: translateX(0);
-  }
+  .notification.show { transform: translateX(0); }
 </style>
 </head>
 <body>
@@ -123,7 +97,11 @@
     </div>
 
     <footer>
-      <p>Dados em tempo real da <a href="https://store.epicgames.com/pt-BR/free-games" style="color:#00aaff;" target="_blank">Epic Games Store</a></p>
+      <p>Dados em tempo real da 
+        <a href="https://store.epicgames.com/pt-BR/free-games" style="color:#00aaff;" target="_blank">
+          Epic Games Store
+        </a>
+      </p>
     </footer>
   </div>
 
@@ -137,29 +115,27 @@
     const notification = document.getElementById("notification");
     let lastFreeTitles = [];
 
-    // Exibir notificação popup
+    // Mostrar notificação popup
     function showNotification(msg) {
       notification.textContent = msg;
       notification.classList.add("show");
       setTimeout(() => notification.classList.remove("show"), 5000);
     }
 
-    // Buscar jogos grátis em tempo real
+    // Buscar jogos grátis da Epic
     async function fetchFreeGames() {
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
         const response = await fetch(apiURL);
         const data = await response.json();
-        const games = data.data.Catalog.searchStore.elements;
-
-        // Filtrar apenas jogos com promoções gratuitas ativas
-        const freeGames = games.filter(g => {
-          const promo = g.price?.totalPrice?.discountPrice === 0;
-          const promoActive = g.promotions?.promotionalOffers?.length > 0;
+        const elements = data.data?.Catalog?.searchStore?.elements || [];
+        
+        const freeGames = elements.filter(game => {
+          const promo = game.price?.totalPrice?.discountPrice === 0;
+          const promoActive = game.promotions?.promotionalOffers?.length > 0;
           return promo && promoActive;
         });
 
-        // Renderizar os jogos
         renderGames(freeGames);
 
         const currentTitles = freeGames.map(g => g.title);
@@ -177,7 +153,7 @@
       }
     }
 
-    // Renderizar jogos na tela
+    // Renderizar os jogos na tela
     function renderGames(games) {
       gamesGrid.innerHTML = "";
       if (games.length === 0) {
@@ -186,9 +162,10 @@
       }
       games.forEach(game => {
         const image = game.keyImages?.[1]?.url || game.keyImages?.[0]?.url || "";
-        const originalPrice = (game.price?.totalPrice?.fmtPrice?.originalPrice) || "R$ -";
-        const endDate = game.promotions.promotionalOffers[0].promotionalOffers[0].endDate;
-        const endTime = new Date(endDate).toLocaleString("pt-BR");
+        const originalPrice = game.price?.totalPrice?.fmtPrice?.originalPrice || "R$ -";
+        const endDate = game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate;
+        const endTime = endDate ? new Date(endDate).toLocaleString("pt-BR") : "Indefinido";
+        const pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
 
         const card = document.createElement("div");
         card.className = "game-card";
@@ -199,7 +176,7 @@
             <p class="original">${originalPrice}</p>
             <p class="price">💥 GRÁTIS!</p>
             <p><small>Disponível até: ${endTime}</small></p>
-            <a href="https://store.epicgames.com/p/${game.catalogNs.mappings?.[0]?.pageSlug || ''}" target="_blank">
+            <a href="https://store.epicgames.com/p/${pageSlug}" target="_blank">
               <button class="btn mt-2 w-full">Resgatar</button>
             </a>
           </div>`;
@@ -207,10 +184,10 @@
       });
     }
 
-    // Atualização manual
+    // Atualizar manualmente
     refreshBtn.addEventListener("click", fetchFreeGames);
 
-    // Atualização automática a cada 10 minutos
+    // Atualizar automaticamente a cada 10 minutos
     fetchFreeGames();
     setInterval(fetchFreeGames, 600000);
   </script>
