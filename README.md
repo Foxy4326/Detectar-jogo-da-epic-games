@@ -15,20 +15,30 @@
     padding: 0;
   }
 
-  header {
+  header { text-align: center; padding: 30px 0; }
+  h1 { font-size: 2.2rem; color: #00aaff; font-weight: 700; }
+  .subtitle { color: #ccc; margin-top: 5px; }
+
+  nav {
     text-align: center;
-    padding: 30px 0;
+    margin-top: 10px;
   }
-
-  h1 {
-    font-size: 2.2rem;
-    color: #00aaff;
-    font-weight: 700;
+  nav button {
+    background: #1e40af;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
   }
-
-  .subtitle {
-    color: #ccc;
-    margin-top: 5px;
+  nav button.active {
+    background: #00aaff;
+  }
+  nav button:hover {
+    background: #2563eb;
   }
 
   .games-grid {
@@ -47,30 +57,12 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     transition: transform 0.3s;
   }
+  .game-card:hover { transform: translateY(-6px); }
 
-  .game-card:hover {
-    transform: translateY(-6px);
-  }
-
-  .game-image {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-  }
-
-  .game-info {
-    padding: 15px;
-  }
-
-  .price {
-    color: #00ff99;
-    font-weight: bold;
-  }
-
-  .original {
-    text-decoration: line-through;
-    color: #999;
-  }
+  .game-image { width: 100%; height: 160px; object-fit: cover; background: #333; }
+  .game-info { padding: 15px; }
+  .price { color: #00ff99; font-weight: bold; }
+  .original { text-decoration: line-through; color: #999; }
 
   .btn {
     background: #0074e4;
@@ -85,50 +77,32 @@
     width: 100%;
     text-align: center;
   }
+  .btn:hover { background: #005bb5; }
 
-  .btn:hover {
-    background: #005bb5;
-  }
-
-  footer {
-    text-align: center;
-    margin-top: 30px;
-    color: #aaa;
-    padding-bottom: 30px;
-  }
-
-  .loading {
-    text-align: center;
-    font-size: 1.2rem;
-    color: #bbb;
-    margin-top: 40px;
-  }
+  footer { text-align: center; margin-top: 30px; color: #aaa; padding-bottom: 30px; }
+  .loading { text-align: center; font-size: 1.2rem; color: #bbb; margin-top: 40px; }
 
   .notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #222;
-    color: white;
-    padding: 15px 20px;
-    border-left: 4px solid #00ff99;
-    border-radius: 6px;
+    position: fixed; top: 20px; right: 20px;
+    background: #222; color: white; padding: 15px 20px;
+    border-left: 4px solid #00ff99; border-radius: 6px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-    transform: translateX(300px);
-    transition: transform 0.5s ease;
+    transform: translateX(300px); transition: transform 0.5s ease;
     z-index: 9999;
   }
-
-  .notification.show {
-    transform: translateX(0);
-  }
+  .notification.show { transform: translateX(0); }
 </style>
 </head>
 <body>
   <header>
     <h1>🎁 GameAlerts</h1>
-    <p class="subtitle">Jogos pagos que estão GRÁTIS agora na Epic Games Store</p>
+    <p class="subtitle">Jogos pagos que estão ou estarão GRÁTIS na Epic Games Store</p>
   </header>
+
+  <nav>
+    <button id="tabAtivos" class="active">🎮 Grátis Agora</button>
+    <button id="tabFuturos">⏳ Em Breve</button>
+  </nav>
 
   <div id="status" class="text-center mb-4 text-sm text-gray-400">Carregando lista de jogos...</div>
   <div class="games-grid" id="gamesGrid"></div>
@@ -153,16 +127,17 @@
     const statusText = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
     const notification = document.getElementById("notification");
+    const tabAtivos = document.getElementById("tabAtivos");
+    const tabFuturos = document.getElementById("tabFuturos");
     let lastFreeTitles = [];
+    let allGames = { ativos: [], futuros: [] };
 
-    // Mostrar notificação popup
     function showNotification(msg) {
       notification.textContent = msg;
       notification.classList.add("show");
       setTimeout(() => notification.classList.remove("show"), 5000);
     }
 
-    // Buscar jogos grátis da Epic
     async function fetchFreeGames() {
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
@@ -172,18 +147,24 @@
         const data = await response.json();
         const elements = data?.data?.Catalog?.searchStore?.elements || [];
 
-        // Filtrar promoções gratuitas ativas
-        const freeGames = elements.filter(game => {
-          const original = game.price?.totalPrice?.originalPrice > 0;
+        // Separar jogos ativos e futuros
+        const ativos = elements.filter(game => {
           const discount = game.price?.totalPrice?.discountPrice === 0;
           const activePromo = game.promotions?.promotionalOffers?.length > 0;
-          return original && discount && activePromo;
+          return discount && activePromo;
         });
 
-        renderGames(freeGames);
+        const futuros = elements.filter(game => {
+          const discount = game.price?.totalPrice?.discountPrice === 0;
+          const upcomingPromo = game.promotions?.upcomingPromotionalOffers?.length > 0;
+          return discount && upcomingPromo;
+        });
+
+        allGames = { ativos, futuros };
+        renderGames(ativos);
 
         // Detectar novos jogos
-        const currentTitles = freeGames.map(g => g.title);
+        const currentTitles = ativos.map(g => g.title);
         const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
         if (lastFreeTitles.length > 0 && newTitles.length > 0) {
           showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
@@ -198,19 +179,26 @@
       }
     }
 
-    // Renderizar os jogos
     function renderGames(games) {
       gamesGrid.innerHTML = "";
       if (games.length === 0) {
         gamesGrid.innerHTML = "<p class='loading'>Nenhum jogo gratuito disponível no momento 😔</p>";
         return;
       }
+
       games.forEach(game => {
-        const image = game.keyImages?.[1]?.url || game.keyImages?.[0]?.url || "";
+        const image = game.keyImages?.find(img => img.type === "OfferImageWide")?.url ||
+                      game.keyImages?.[0]?.url ||
+                      "https://via.placeholder.com/600x400?text=Sem+Capa";
         const originalPrice = (game.price?.totalPrice?.originalPrice / 100).toFixed(2);
-        const endDate = game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate;
-        const endTime = endDate ? new Date(endDate).toLocaleString("pt-BR") : "Indefinido";
-        const pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
+        const promo = game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0] ||
+                      game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0];
+        const endTime = promo?.endDate ? new Date(promo.endDate).toLocaleString("pt-BR") : "Indefinido";
+        const startTime = promo?.startDate ? new Date(promo.startDate).toLocaleString("pt-BR") : null;
+
+        let pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
+        if (!pageSlug.startsWith("p/")) pageSlug = "p/" + pageSlug;
+        const gameUrl = "https://store.epicgames.com/" + pageSlug.replace(/^\/+/, "");
 
         const card = document.createElement("div");
         card.className = "game-card";
@@ -220,8 +208,8 @@
             <h3>${game.title}</h3>
             <p class="original">De R$${originalPrice}</p>
             <p class="price">💥 GRÁTIS!</p>
-            <p><small>Disponível até: ${endTime}</small></p>
-            <a href="https://store.epicgames.com/p/${pageSlug}" target="_blank">
+            <p><small>${startTime ? `Disponível a partir de: ${startTime}` : `Disponível até: ${endTime}`}</small></p>
+            <a href="${gameUrl}" target="_blank" rel="noopener">
               <button class="btn mt-2">Resgatar</button>
             </a>
           </div>`;
@@ -229,10 +217,20 @@
       });
     }
 
-    // Atualização manual
     refreshBtn.addEventListener("click", fetchFreeGames);
 
-    // Atualização automática a cada 10 minutos
+    tabAtivos.addEventListener("click", () => {
+      tabAtivos.classList.add("active");
+      tabFuturos.classList.remove("active");
+      renderGames(allGames.ativos);
+    });
+
+    tabFuturos.addEventListener("click", () => {
+      tabFuturos.classList.add("active");
+      tabAtivos.classList.remove("active");
+      renderGames(allGames.futuros);
+    });
+
     fetchFreeGames();
     setInterval(fetchFreeGames, 600000);
   </script>
