@@ -7,9 +7,10 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body { background: linear-gradient(135deg, #0f172a, #1e293b); color: white; font-family: "Poppins", sans-serif; min-height: 100vh; margin:0; padding:0; }
-  header { text-align:center; padding:30px 0; }
-  h1 { font-size:2.2rem; color:#00aaff; font-weight:700; }
+  header { text-align:center; padding:15px 0; }
+  h1 { font-size:2.2rem; color:#00aaff; font-weight:700; margin:0; }
   .subtitle { color:#ccc; margin-top:5px; }
+  .clock { font-size:1rem; color:#ffcc00; margin-top:5px; }
   nav { text-align:center; margin-top:10px; }
   nav button { background:#1e40af; color:white; border:none; padding:10px 15px; margin:5px; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.3s; }
   nav button.active { background:#00aaff; }
@@ -33,9 +34,11 @@
 </style>
 </head>
 <body>
+
 <header>
   <h1>🎁 GameAlerts</h1>
   <p class="subtitle">Jogos pagos que estão ou estarão GRÁTIS na Epic Games Store</p>
+  <div class="clock" id="brClock">Carregando horário...</div>
 </header>
 
 <nav>
@@ -68,10 +71,23 @@ const reportBtn = document.getElementById("reportBtn");
 const notification = document.getElementById("notification");
 const tabAtivos = document.getElementById("tabAtivos");
 const tabFuturos = document.getElementById("tabFuturos");
+const brClock = document.getElementById("brClock");
 
 let lastFreeTitles = [];
 let allGames = { ativos: [], futuros: [] };
 let countdownIntervals = [];
+
+function updateBRClock() {
+  const now = new Date();
+  // Ajusta para horário de Brasília (GMT-3)
+  const brTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  const hours = String(brTime.getHours()).padStart(2,'0');
+  const minutes = String(brTime.getMinutes()).padStart(2,'0');
+  const seconds = String(brTime.getSeconds()).padStart(2,'0');
+  brClock.textContent = `🕒 Horário de Brasília: ${hours}:${minutes}:${seconds}`;
+}
+setInterval(updateBRClock, 1000);
+updateBRClock();
 
 function showNotification(msg) {
   notification.textContent = msg;
@@ -182,20 +198,9 @@ function formatDiff(ms) {
   return `${d}d ${h}h ${m}m ${s}s`;
 }
 
-tabAtivos.addEventListener("click", () => {
-  tabAtivos.classList.add("active");
-  tabFuturos.classList.remove("active");
-  renderGames(allGames.ativos, true);
-});
-
-tabFuturos.addEventListener("click", () => {
-  tabFuturos.classList.add("active");
-  tabAtivos.classList.remove("active");
-  renderGames(allGames.futuros, false);
-});
-
+tabAtivos.addEventListener("click", () => { tabAtivos.classList.add("active"); tabFuturos.classList.remove("active"); renderGames(allGames.ativos, true); });
+tabFuturos.addEventListener("click", () => { tabFuturos.classList.add("active"); tabAtivos.classList.remove("active"); renderGames(allGames.futuros, false); });
 refreshBtn.addEventListener("click", fetchFreeGames);
-
 reportBtn.addEventListener("click", () => {
   const subject = encodeURIComponent("🐞 Reporte de Bug - GameAlerts");
   const body = encodeURIComponent("Descreva o bug que você encontrou:\n\n");
