@@ -19,10 +19,7 @@
   h1 { font-size: 2.2rem; color: #00aaff; font-weight: 700; }
   .subtitle { color: #ccc; margin-top: 5px; }
 
-  nav {
-    text-align: center;
-    margin-top: 10px;
-  }
+  nav { text-align: center; margin-top: 10px; }
   nav button {
     background: #1e40af;
     color: white;
@@ -52,6 +49,7 @@
     overflow: hidden;
     box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     transition: transform 0.3s;
+    position: relative;
   }
   .game-card:hover { transform: translateY(-6px); }
 
@@ -92,8 +90,12 @@
     background: #dc2626;
     margin-top: 10px;
   }
-  .bug-btn:hover {
-    background: #b91c1c;
+  .bug-btn:hover { background: #b91c1c; }
+
+  .countdown {
+    font-weight: bold;
+    margin-top: 5px;
+    color: #ffcc00;
   }
 </style>
 </head>
@@ -137,6 +139,7 @@
     const tabFuturos = document.getElementById("tabFuturos");
     let lastFreeTitles = [];
     let allGames = { ativos: [], futuros: [] };
+    let countdownIntervals = [];
 
     function showNotification(msg) {
       notification.textContent = msg;
@@ -166,13 +169,13 @@
         });
 
         allGames = { ativos, futuros };
-        renderGames(ativos);
+        renderGames(ativos, true);
 
         const currentTitles = ativos.map(g => g.title);
         const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
         if (lastFreeTitles.length > 0 && newTitles.length > 0) {
           showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
-          setTimeout(() => location.reload(), 3000); // recarrega página automaticamente
+          setTimeout(() => location.reload(), 3000);
         }
         lastFreeTitles = currentTitles;
 
@@ -184,8 +187,11 @@
       }
     }
 
-    function renderGames(games) {
+    function renderGames(games, isAtivos) {
       gamesGrid.innerHTML = "";
+      countdownIntervals.forEach(interval => clearInterval(interval));
+      countdownIntervals = [];
+
       if (games.length === 0) {
         gamesGrid.innerHTML = "<p class='loading'>Nenhum jogo gratuito disponível no momento 😔</p>";
         return;
@@ -196,10 +202,12 @@
                       game.keyImages?.[0]?.url ||
                       "https://via.placeholder.com/600x400?text=Sem+Capa";
         const originalPrice = (game.price?.totalPrice?.originalPrice / 100).toFixed(2);
-        const promo = game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0] ||
-                      game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0];
-        const endTime = promo?.endDate ? new Date(promo.endDate).toLocaleString("pt-BR") : "Indefinido";
-        const startTime = promo?.startDate ? new Date(promo.startDate).toLocaleString("pt-BR") : null;
+        const promo = isAtivos
+          ? game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]
+          : game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0];
+
+        const startTime = promo?.startDate ? new Date(promo.startDate) : null;
+        const endTime = promo?.endDate ? new Date(promo.endDate) : null;
 
         let pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
         if (!pageSlug.startsWith("p/")) pageSlug = "p/" + pageSlug;
@@ -213,31 +221,64 @@
             <h3>${game.title}</h3>
             <p class="original">De R$${originalPrice}</p>
             <p class="price">💥 GRÁTIS!</p>
-            <p><small>${startTime ? `Disponível a partir de: ${startTime}` : `Disponível até: ${endTime}`}</small></p>
+            <div class="countdown"></div>
             <a href="${gameUrl}" target="_blank" rel="noopener">
               <button class="btn mt-2">Resgatar</button>
             </a>
           </div>`;
         gamesGrid.appendChild(card);
+
+        // Contador
+        const countdownEl = card.querySelector(".countdown");
+        const interval = setInterval(() => {
+          const now = new Date();
+          let diff;
+          if (isAtivos) {
+            diff = endTime - now;
+            if (diff <= 0) {
+              countdownEl.textContent = "⏰ Promoção terminou!";
+              clearInterval(interval);
+            } else {
+              countdownEl.textContent = formatDiff(diff);
+            }
+          } else {
+            diff = startTime - now;
+            if (diff <= 0) {
+              countdownEl.textContent = "🎮 Promoção disponível agora!";
+              clearInterval(interval);
+            } else {
+              const days = Math.floor(diff / (1000*60*60*24));
+              countdownEl.textContent = `⏳ Começa em: ${days} dia(s)`;
+            }
+          }
+        }, 1000);
+        countdownIntervals.push(interval);
       });
     }
 
-    // Alternar abas
+    function formatDiff(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const d = Math.floor(totalSec / 86400);
+      const h = Math.floor((totalSec % 86400) / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      return `${d}d ${h}h ${m}m ${s}s`;
+    }
+
     tabAtivos.addEventListener("click", () => {
       tabAtivos.classList.add("active");
       tabFuturos.classList.remove("active");
-      renderGames(allGames.ativos);
+      renderGames(allGames.ativos, true);
     });
 
     tabFuturos.addEventListener("click", () => {
       tabFuturos.classList.add("active");
       tabAtivos.classList.remove("active");
-      renderGames(allGames.futuros);
+      renderGames(allGames.futuros, false);
     });
 
     refreshBtn.addEventListener("click", fetchFreeGames);
 
-    // Botão de reportar bug
     reportBtn.addEventListener("click", () => {
       const subject = encodeURIComponent("🐞 Reporte de Bug - GameAlerts");
       const body = encodeURIComponent("Descreva o bug que você encontrou:\n\n");
