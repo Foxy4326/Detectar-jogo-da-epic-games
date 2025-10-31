@@ -127,17 +127,21 @@
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
         const response = await fetch(apiURL);
+        if (!response.ok) throw new Error("Erro ao acessar API da Epic Games");
+
         const data = await response.json();
-        const elements = data.data?.Catalog?.searchStore?.elements || [];
-        
+        const elements = data?.data?.Catalog?.searchStore?.elements || [];
+
+        // Filtrar promoções gratuitas ativas
         const freeGames = elements.filter(game => {
-          const promo = game.price?.totalPrice?.discountPrice === 0;
-          const promoActive = game.promotions?.promotionalOffers?.length > 0;
-          return promo && promoActive;
+          const discount = game.price?.totalPrice?.discountPrice === 0;
+          const activePromo = game.promotions?.promotionalOffers?.length > 0;
+          return discount && activePromo;
         });
 
         renderGames(freeGames);
 
+        // Detectar novos jogos
         const currentTitles = freeGames.map(g => g.title);
         const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
         if (lastFreeTitles.length > 0 && newTitles.length > 0) {
@@ -153,7 +157,7 @@
       }
     }
 
-    // Renderizar os jogos na tela
+    // Renderizar os jogos
     function renderGames(games) {
       gamesGrid.innerHTML = "";
       if (games.length === 0) {
@@ -184,10 +188,10 @@
       });
     }
 
-    // Atualizar manualmente
+    // Atualização manual
     refreshBtn.addEventListener("click", fetchFreeGames);
 
-    // Atualizar automaticamente a cada 10 minutos
+    // Atualização automática a cada 10 minutos
     fetchFreeGames();
     setInterval(fetchFreeGames, 600000);
   </script>
