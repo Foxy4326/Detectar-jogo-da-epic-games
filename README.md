@@ -3,87 +3,238 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎮 Jogos Pagos Grátis — Epic Games</title>
+<title>🎮 GameAlerts — Jogos Pagos Grátis</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body {
-    background: linear-gradient(135deg, #111, #1f2937);
+    background: linear-gradient(135deg, #0f172a, #1e293b);
     color: white;
     font-family: "Poppins", sans-serif;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
   }
+
+  header {
+    text-align: center;
+    padding: 30px 0;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    color: #00aaff;
+    font-weight: 700;
+  }
+
+  .subtitle {
+    color: #ccc;
+    margin-top: 5px;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
+
   .game-card {
-    transition: transform 0.3s, box-shadow 0.3s;
+    background: #1c1c1c;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.3s;
   }
+
   .game-card:hover {
-    transform: scale(1.03);
-    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    transform: translateY(-6px);
+  }
+
+  .game-image {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+  }
+
+  .game-info {
+    padding: 15px;
+  }
+
+  .price {
+    color: #00ff99;
+    font-weight: bold;
+  }
+
+  .original {
+    text-decoration: line-through;
+    color: #999;
+  }
+
+  .btn {
+    background: #0074e4;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  .btn:hover {
+    background: #005bb5;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #aaa;
+    padding-bottom: 30px;
+  }
+
+  .loading {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #bbb;
+    margin-top: 40px;
+  }
+
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #222;
+    color: white;
+    padding: 15px 20px;
+    border-left: 4px solid #00ff99;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transform: translateX(300px);
+    transition: transform 0.5s ease;
+    z-index: 9999;
+  }
+
+  .notification.show {
+    transform: translateX(0);
   }
 </style>
 </head>
-<body class="flex flex-col items-center justify-center p-6">
+<body>
+  <header>
+    <h1>🎁 GameAlerts</h1>
+    <p class="subtitle">Jogos pagos que estão GRÁTIS agora na Epic Games Store</p>
+  </header>
 
-  <h1 class="text-3xl font-bold mb-6 text-center">🎁 Jogos Pagos Grátis — Epic Games Store</h1>
-  <p id="status" class="text-gray-300 mb-6 text-center">Carregando lista de jogos...</p>
+  <div id="status" class="text-center mb-4 text-sm text-gray-400">Carregando lista de jogos...</div>
+  <div class="games-grid" id="gamesGrid"></div>
 
-  <div id="games" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-6xl w-full"></div>
+  <div class="text-center mt-6">
+    <button class="btn" id="refreshBtn">🔄 Atualizar Agora</button>
+  </div>
+
+  <footer>
+    <p>Dados em tempo real da 
+      <a href="https://store.epicgames.com/pt-BR/free-games" style="color:#00aaff;" target="_blank">
+        Epic Games Store
+      </a>
+    </p>
+  </footer>
+
+  <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
   <script>
-    async function carregarJogosGratis() {
-      const status = document.getElementById("status");
-      const container = document.getElementById("games");
+    const apiURL = "https://corsproxy.io/?" + encodeURIComponent("https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR");
+    const gamesGrid = document.getElementById("gamesGrid");
+    const statusText = document.getElementById("status");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const notification = document.getElementById("notification");
+    let lastFreeTitles = [];
 
+    // Mostrar notificação popup
+    function showNotification(msg) {
+      notification.textContent = msg;
+      notification.classList.add("show");
+      setTimeout(() => notification.classList.remove("show"), 5000);
+    }
+
+    // Buscar jogos grátis da Epic
+    async function fetchFreeGames() {
+      statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
-        // API com proxy para evitar bloqueio CORS
-        const apiURL = "https://api.allorigins.win/raw?url=" +
-          encodeURIComponent("https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR");
+        const response = await fetch(apiURL);
+        if (!response.ok) throw new Error("Erro ao acessar API da Epic Games");
 
-        const resposta = await fetch(apiURL);
-        if (!resposta.ok) throw new Error("Falha ao conectar à API.");
+        const data = await response.json();
+        const elements = data?.data?.Catalog?.searchStore?.elements || [];
 
-        const dados = await resposta.json();
-        const jogos = dados.data.Catalog.searchStore.elements;
-
-        const jogosGratis = jogos.filter(jogo =>
-          jogo.price.totalPrice.originalPrice > 0 &&
-          jogo.price.totalPrice.discountPrice === 0
-        );
-
-        if (jogosGratis.length === 0) {
-          status.textContent = "🕹️ Nenhum jogo pago está gratuito no momento.";
-          return;
-        }
-
-        status.textContent = "✅ Jogos pagos gratuitos encontrados:";
-        container.innerHTML = "";
-
-        jogosGratis.forEach(jogo => {
-          const img = jogo.keyImages.find(img => img.type === "DieselStoreFrontWide")?.url || "";
-          const nome = jogo.title;
-          const link = `https://store.epicgames.com/p/${jogo.productSlug}`;
-          const precoOriginal = (jogo.price.totalPrice.originalPrice / 100).toFixed(2);
-
-          const card = document.createElement("div");
-          card.className = "game-card bg-gray-800 rounded-2xl overflow-hidden shadow-lg";
-
-          card.innerHTML = `
-            <img src="${img}" alt="${nome}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h2 class="text-lg font-bold mb-2">${nome}</h2>
-              <p class="text-sm text-gray-400 mb-2">💰 De R$${precoOriginal} por <span class="text-green-400 font-bold">GRÁTIS</span></p>
-              <a href="${link}" target="_blank" class="inline-block bg-green-600 hover:bg-green-700 px-3 py-2 rounded-md text-sm font-semibold">Resgatar</a>
-            </div>
-          `;
-          container.appendChild(card);
+        // Filtrar promoções gratuitas ativas
+        const freeGames = elements.filter(game => {
+          const original = game.price?.totalPrice?.originalPrice > 0;
+          const discount = game.price?.totalPrice?.discountPrice === 0;
+          const activePromo = game.promotions?.promotionalOffers?.length > 0;
+          return original && discount && activePromo;
         });
 
-      } catch (erro) {
-        console.error(erro);
-        status.textContent = "❌ Erro ao carregar jogos da Epic Games.";
+        renderGames(freeGames);
+
+        // Detectar novos jogos
+        const currentTitles = freeGames.map(g => g.title);
+        const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
+        if (lastFreeTitles.length > 0 && newTitles.length > 0) {
+          showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
+        }
+        lastFreeTitles = currentTitles;
+
+        const time = new Date().toLocaleTimeString("pt-BR");
+        statusText.textContent = `✅ Atualizado às ${time}`;
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+        statusText.textContent = "❌ Erro ao carregar jogos da Epic Games.";
       }
     }
 
-    carregarJogosGratis();
+    // Renderizar os jogos
+    function renderGames(games) {
+      gamesGrid.innerHTML = "";
+      if (games.length === 0) {
+        gamesGrid.innerHTML = "<p class='loading'>Nenhum jogo gratuito disponível no momento 😔</p>";
+        return;
+      }
+      games.forEach(game => {
+        const image = game.keyImages?.[1]?.url || game.keyImages?.[0]?.url || "";
+        const originalPrice = (game.price?.totalPrice?.originalPrice / 100).toFixed(2);
+        const endDate = game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]?.endDate;
+        const endTime = endDate ? new Date(endDate).toLocaleString("pt-BR") : "Indefinido";
+        const pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
+
+        const card = document.createElement("div");
+        card.className = "game-card";
+        card.innerHTML = `
+          <img src="${image}" alt="${game.title}" class="game-image">
+          <div class="game-info">
+            <h3>${game.title}</h3>
+            <p class="original">De R$${originalPrice}</p>
+            <p class="price">💥 GRÁTIS!</p>
+            <p><small>Disponível até: ${endTime}</small></p>
+            <a href="https://store.epicgames.com/p/${pageSlug}" target="_blank">
+              <button class="btn mt-2">Resgatar</button>
+            </a>
+          </div>`;
+        gamesGrid.appendChild(card);
+      });
+    }
+
+    // Atualização manual
+    refreshBtn.addEventListener("click", fetchFreeGames);
+
+    // Atualização automática a cada 10 minutos
+    fetchFreeGames();
+    setInterval(fetchFreeGames, 600000);
   </script>
 </body>
 </html>
