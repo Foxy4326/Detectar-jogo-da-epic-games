@@ -132,12 +132,14 @@
     let lastFreeTitles = [];
     let allGames = { ativos: [], futuros: [] };
 
+    // Mostrar notificação popup
     function showNotification(msg) {
       notification.textContent = msg;
       notification.classList.add("show");
       setTimeout(() => notification.classList.remove("show"), 5000);
     }
 
+    // Buscar jogos gratuitos
     async function fetchFreeGames() {
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
@@ -163,11 +165,12 @@
         allGames = { ativos, futuros };
         renderGames(ativos);
 
-        // Detectar novos jogos
+        // Detectar novos jogos e recarregar se necessário
         const currentTitles = ativos.map(g => g.title);
         const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
         if (lastFreeTitles.length > 0 && newTitles.length > 0) {
           showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
+          setTimeout(() => location.reload(), 3000); // 🔁 recarrega automaticamente após 3s
         }
         lastFreeTitles = currentTitles;
 
@@ -179,6 +182,7 @@
       }
     }
 
+    // Renderizar os jogos na tela
     function renderGames(games) {
       gamesGrid.innerHTML = "";
       if (games.length === 0) {
@@ -217,8 +221,7 @@
       });
     }
 
-    refreshBtn.addEventListener("click", fetchFreeGames);
-
+    // Alternar entre abas
     tabAtivos.addEventListener("click", () => {
       tabAtivos.classList.add("active");
       tabFuturos.classList.remove("active");
@@ -231,6 +234,9 @@
       renderGames(allGames.futuros);
     });
 
+    refreshBtn.addEventListener("click", fetchFreeGames);
+
+    // Atualização automática a cada 10 minutos
     fetchFreeGames();
     setInterval(fetchFreeGames, 600000);
   </script>
