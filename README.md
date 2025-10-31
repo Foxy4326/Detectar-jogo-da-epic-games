@@ -107,22 +107,22 @@
 
   <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
+  <!-- 🔹 Script ÚNICO com tudo integrado -->
   <script>
-    const apiURL = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
+  (() => {
+    const apiURL = "https://api.allorigins.win/raw?url=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
     const gamesGrid = document.getElementById("gamesGrid");
     const statusText = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
     const notification = document.getElementById("notification");
     let lastFreeTitles = [];
 
-    // Mostrar notificação popup
     function showNotification(msg) {
       notification.textContent = msg;
       notification.classList.add("show");
       setTimeout(() => notification.classList.remove("show"), 5000);
     }
 
-    // Buscar jogos grátis da Epic
     async function fetchFreeGames() {
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
@@ -132,7 +132,6 @@
         const data = await response.json();
         const elements = data?.data?.Catalog?.searchStore?.elements || [];
 
-        // Filtrar promoções gratuitas ativas
         const freeGames = elements.filter(game => {
           const discount = game.price?.totalPrice?.discountPrice === 0;
           const activePromo = game.promotions?.promotionalOffers?.length > 0;
@@ -141,7 +140,6 @@
 
         renderGames(freeGames);
 
-        // Detectar novos jogos
         const currentTitles = freeGames.map(g => g.title);
         const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
         if (lastFreeTitles.length > 0 && newTitles.length > 0) {
@@ -157,7 +155,6 @@
       }
     }
 
-    // Renderizar os jogos
     function renderGames(games) {
       gamesGrid.innerHTML = "";
       if (games.length === 0) {
@@ -188,12 +185,10 @@
       });
     }
 
-    // Atualização manual
     refreshBtn.addEventListener("click", fetchFreeGames);
-
-    // Atualização automática a cada 10 minutos
     fetchFreeGames();
     setInterval(fetchFreeGames, 600000);
+  })();
   </script>
 </body>
 </html>
