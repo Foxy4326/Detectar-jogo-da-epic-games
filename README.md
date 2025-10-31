@@ -1,355 +1,218 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameAlerts - Jogos Gratuitos Epic Games</title>
-    <style>
-        :root {
-            --primary: #2a2a2a;
-            --secondary: #121212;
-            --accent: #0074e4;
-            --accent-hover: #0056b3;
-            --text: #ffffff;
-            --text-secondary: #b0b0b0;
-            --success: #4CAF50;
-            --warning: #FF9800;
-            --error: #f44336;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 GameAlerts - Jogos Grátis da Epic Games</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body {
+    background: #121212;
+    color: white;
+    font-family: "Segoe UI", sans-serif;
+    transition: background 0.8s;
+  }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+  header {
+    text-align: center;
+    padding: 30px 0;
+    background: linear-gradient(135deg, #1e1e1e, #2c2c2c);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    margin-bottom: 30px;
+  }
 
-        body {
-            background-color: var(--primary);
-            color: var(--text);
-            line-height: 1.6;
-        }
+  h1 { font-size: 2.2rem; color: #00aaff; }
+  .subtitle { color: #ccc; }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
 
-        header {
-            text-align: center;
-            padding: 30px 0;
-            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
+  .game-card {
+    background: #1c1c1c;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.3s;
+  }
 
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--success));
-        }
+  .game-card:hover {
+    transform: translateY(-6px);
+  }
 
-        h1 {
-            font-size: 2.5rem;
-            color: var(--accent);
-        }
+  .game-image {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+  }
 
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.8;
-        }
+  .game-info {
+    padding: 15px;
+  }
 
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--secondary);
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+  .price {
+    color: #00ff99;
+    font-weight: bold;
+  }
 
-        .notification-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+  .original {
+    text-decoration: line-through;
+    color: #999;
+  }
 
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
+  .btn {
+    background: #0074e4;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+  }
 
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .btn:hover { background: #005bb5; }
 
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
+  footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #aaa;
+  }
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px; width: 26px;
-            left: 4px; bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
+  .loading {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #bbb;
+    margin-top: 40px;
+  }
 
-        input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(26px); }
-
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .game-card {
-            background-color: var(--secondary);
-            border-radius: 10px;
-            overflow: hidden;
-            transition: 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .game-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
-
-        .game-image {
-            height: 180px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            color: white;
-        }
-
-        .game-badge {
-            position: absolute;
-            top: 10px; right: 10px;
-            background-color: var(--success);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .notification-area, .instructions {
-            background-color: var(--secondary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .notification-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .notification-item {
-            padding: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .notification-time {
-            margin-left: auto;
-            opacity: 0.7;
-            font-size: 0.8rem;
-        }
-
-        .btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            width: 100%;
-        }
-
-        .btn:hover { background-color: var(--accent-hover); }
-
-        .push-notification {
-            position: fixed;
-            top: 20px; right: 20px;
-            background-color: var(--secondary);
-            border-left: 4px solid var(--accent);
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.5s ease;
-        }
-
-        .push-notification.show { transform: translateX(0); }
-
-        .icon::before { margin-right: 5px; }
-    </style>
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #222;
+    color: white;
+    padding: 15px 20px;
+    border-left: 4px solid #00ff99;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transform: translateX(300px);
+    transition: transform 0.5s ease;
+    z-index: 9999;
+  }
+  .notification.show {
+    transform: translateX(0);
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🎮 GameAlerts</h1>
-            <p class="subtitle">Jogos Gratuitos Atuais na Epic Games Store</p>
-        </header>
+  <div class="container mx-auto px-4">
+    <header>
+      <h1>🎁 GameAlerts</h1>
+      <p class="subtitle">Jogos pagos que estão GRÁTIS agora na Epic Games Store</p>
+    </header>
 
-        <div class="status-bar">
-            <div class="notification-toggle">
-                <span>Notificações:</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="notificationToggle" checked>
-                    <span class="slider"></span>
-                </label>
-                <span id="toggleStatus">Ativadas</span>
-            </div>
-            <span id="lastUpdate">Atualizado: Dezembro 2024</span>
-        </div>
+    <div id="status" class="text-center mb-4 text-sm text-gray-400">Carregando lista de jogos...</div>
+    <div class="games-grid" id="gamesGrid"></div>
 
-        <div class="notification-area">
-            <h2>🔔 Notificações</h2>
-            <div class="notification-list" id="notificationList"></div>
-        </div>
-
-        <h2>🎁 Jogos Gratuitos Atuais</h2>
-        <div class="games-grid" id="gamesGrid"></div>
-
-        <div class="instructions">
-            <h3>⏰ Próximos Jogos</h3>
-            <p>Novos jogos gratuitos são liberados toda quinta-feira às 16:00 (horário de Brasília).</p>
-        </div>
-
-        <button class="btn" id="checkManual">Verificar Jogos Manualmente</button>
-
-        <footer style="text-align:center; margin-top:30px;">
-            <a href="https://store.epicgames.com/pt-BR/free-games" target="_blank" style="color: var(--accent);">Visitar Epic Games</a>
-        </footer>
+    <div class="text-center mt-6">
+      <button class="btn" id="refreshBtn">🔄 Atualizar Agora</button>
     </div>
 
-    <div class="push-notification" id="pushNotification">
-        <div id="pushTitle">🎮 Novo Jogo!</div>
-        <div id="pushMessage"></div>
-    </div>
+    <footer>
+      <p>Dados em tempo real da <a href="https://store.epicgames.com/pt-BR/free-games" style="color:#00aaff;" target="_blank">Epic Games Store</a></p>
+    </footer>
+  </div>
 
-    <script>
-        // Funções utilitárias
-        function getCurrentTime() {
-            const now = new Date();
-            return now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        }
+  <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
-        // Dados base
-        const freeGames = [
-            { id: 1, title: "Death Stranding", description: "De Hideo Kojima, uma experiência de ação única.", originalPrice: "R$ 159,90", currentPrice: "Grátis", color: "linear-gradient(45deg, #FF6B6B, #4ECDC4)", timeLeft: "7 dias" },
-            { id: 2, title: "Rocket League", description: "Futebol com carros em ritmo acelerado!", originalPrice: "Free-to-Play", currentPrice: "Grátis", color: "linear-gradient(45deg, #FFD700, #FF69B4)", timeLeft: "Sempre gratuito" }
-        ];
+  <script>
+    const apiURL = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
+    const gamesGrid = document.getElementById("gamesGrid");
+    const statusText = document.getElementById("status");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const notification = document.getElementById("notification");
+    let lastFreeTitles = [];
 
-        let notifications = [
-            { id: 1, message: "Death Stranding está gratuito!", time: getCurrentTime() },
-            { id: 2, message: "Sistema de notificações ativado.", time: getCurrentTime() }
-        ];
+    // Exibir notificação popup
+    function showNotification(msg) {
+      notification.textContent = msg;
+      notification.classList.add("show");
+      setTimeout(() => notification.classList.remove("show"), 5000);
+    }
 
-        const gamesGrid = document.getElementById('gamesGrid');
-        const notificationList = document.getElementById('notificationList');
-        const notificationToggle = document.getElementById('notificationToggle');
-        const toggleStatus = document.getElementById('toggleStatus');
-        const pushNotification = document.getElementById('pushNotification');
-        const pushTitle = document.getElementById('pushTitle');
-        const pushMessage = document.getElementById('pushMessage');
-        const checkManualBtn = document.getElementById('checkManual');
+    // Buscar jogos grátis em tempo real
+    async function fetchFreeGames() {
+      statusText.textContent = "🔍 Atualizando jogos gratuitos...";
+      try {
+        const response = await fetch(apiURL);
+        const data = await response.json();
+        const games = data.data.Catalog.searchStore.elements;
 
-        // Renderização
-        function renderGames() {
-            gamesGrid.innerHTML = '';
-            freeGames.forEach(game => {
-                const card = document.createElement('div');
-                card.className = 'game-card';
-                card.innerHTML = `
-                    <div class="game-image" style="background:${game.color};">${game.title}</div>
-                    <div style="padding:15px;">
-                        <h3>${game.title}</h3>
-                        <p>${game.description}</p>
-                        <p><s>${game.originalPrice}</s> <strong>${game.currentPrice}</strong></p>
-                        <small>Disponível por: ${game.timeLeft}</small>
-                    </div>`;
-                gamesGrid.appendChild(card);
-            });
-        }
-
-        function renderNotifications() {
-            notificationList.innerHTML = '';
-            notifications.forEach(n => {
-                const item = document.createElement('div');
-                item.className = 'notification-item';
-                item.innerHTML = `🔔 ${n.message} <span class="notification-time">${n.time}</span>`;
-                notificationList.appendChild(item);
-            });
-        }
-
-        function showPushNotification(title, message) {
-            if (!notificationToggle.checked) return;
-            pushTitle.textContent = title;
-            pushMessage.textContent = message;
-            pushNotification.classList.add('show');
-            setTimeout(() => pushNotification.classList.remove('show'), 5000);
-        }
-
-        // Verificação de novos jogos
-        function checkForNewGames() {
-            if (Math.random() < 0.2) {
-                const newGames = ["Cyberpunk 2077", "GTA V", "Elden Ring", "The Witcher 3"];
-                const randomGame = newGames[Math.floor(Math.random() * newGames.length)];
-                const newNotification = {
-                    id: notifications.length + 1,
-                    message: `${randomGame} agora está GRATUITO na Epic Games!`,
-                    time: getCurrentTime()
-                };
-                notifications.unshift(newNotification);
-                renderNotifications();
-                showPushNotification("Novo Jogo Gratuito!", newNotification.message);
-            } else {
-                showPushNotification("Verificação concluída", "Nenhum novo jogo gratuito no momento.");
-            }
-        }
-
-        // Eventos
-        notificationToggle.addEventListener('change', () => {
-            toggleStatus.textContent = notificationToggle.checked ? "Ativadas" : "Desativadas";
+        // Filtrar apenas jogos com promoções gratuitas ativas
+        const freeGames = games.filter(g => {
+          const promo = g.price?.totalPrice?.discountPrice === 0;
+          const promoActive = g.promotions?.promotionalOffers?.length > 0;
+          return promo && promoActive;
         });
 
-        checkManualBtn.addEventListener('click', checkForNewGames);
+        // Renderizar os jogos
+        renderGames(freeGames);
 
-        // Inicialização
-        renderGames();
-        renderNotifications();
+        const currentTitles = freeGames.map(g => g.title);
+        const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
+        if (lastFreeTitles.length > 0 && newTitles.length > 0) {
+          showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
+        }
+        lastFreeTitles = currentTitles;
 
-        // Verificação automática a cada 5 minutos
-        setInterval(checkForNewGames, 300000);
-    </script>
+        const time = new Date().toLocaleTimeString("pt-BR");
+        statusText.textContent = `✅ Atualizado automaticamente às ${time}`;
+      } catch (error) {
+        console.error("Erro ao buscar dados:", error);
+        statusText.textContent = "❌ Erro ao carregar jogos da Epic Games.";
+      }
+    }
+
+    // Renderizar jogos na tela
+    function renderGames(games) {
+      gamesGrid.innerHTML = "";
+      if (games.length === 0) {
+        gamesGrid.innerHTML = "<p class='loading'>Nenhum jogo gratuito disponível no momento 😔</p>";
+        return;
+      }
+      games.forEach(game => {
+        const image = game.keyImages?.[1]?.url || game.keyImages?.[0]?.url || "";
+        const originalPrice = (game.price?.totalPrice?.fmtPrice?.originalPrice) || "R$ -";
+        const endDate = game.promotions.promotionalOffers[0].promotionalOffers[0].endDate;
+        const endTime = new Date(endDate).toLocaleString("pt-BR");
+
+        const card = document.createElement("div");
+        card.className = "game-card";
+        card.innerHTML = `
+          <img src="${image}" alt="${game.title}" class="game-image">
+          <div class="game-info">
+            <h3>${game.title}</h3>
+            <p class="original">${originalPrice}</p>
+            <p class="price">💥 GRÁTIS!</p>
+            <p><small>Disponível até: ${endTime}</small></p>
+            <a href="https://store.epicgames.com/p/${game.catalogNs.mappings?.[0]?.pageSlug || ''}" target="_blank">
+              <button class="btn mt-2 w-full">Resgatar</button>
+            </a>
+          </div>`;
+        gamesGrid.appendChild(card);
+      });
+    }
+
+    // Atualização manual
+    refreshBtn.addEventListener("click", fetchFreeGames);
+
+    // Atualização automática a cada 10 minutos
+    fetchFreeGames();
+    setInterval(fetchFreeGames, 600000);
+  </script>
 </body>
 </html>
