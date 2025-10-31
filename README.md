@@ -1,5 +1,3 @@
-# Detectar-jogo-da-epic-games
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
