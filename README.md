@@ -34,12 +34,8 @@
     font-weight: bold;
     transition: 0.3s;
   }
-  nav button.active {
-    background: #00aaff;
-  }
-  nav button:hover {
-    background: #2563eb;
-  }
+  nav button.active { background: #00aaff; }
+  nav button:hover { background: #2563eb; }
 
   .games-grid {
     display: grid;
@@ -91,6 +87,14 @@
     z-index: 9999;
   }
   .notification.show { transform: translateX(0); }
+
+  .bug-btn {
+    background: #dc2626;
+    margin-top: 10px;
+  }
+  .bug-btn:hover {
+    background: #b91c1c;
+  }
 </style>
 </head>
 <body>
@@ -109,6 +113,7 @@
 
   <div class="text-center mt-6">
     <button class="btn" id="refreshBtn">🔄 Atualizar Agora</button>
+    <button class="btn bug-btn" id="reportBtn">🐞 Reportar Bug</button>
   </div>
 
   <footer>
@@ -126,20 +131,19 @@
     const gamesGrid = document.getElementById("gamesGrid");
     const statusText = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
+    const reportBtn = document.getElementById("reportBtn");
     const notification = document.getElementById("notification");
     const tabAtivos = document.getElementById("tabAtivos");
     const tabFuturos = document.getElementById("tabFuturos");
     let lastFreeTitles = [];
     let allGames = { ativos: [], futuros: [] };
 
-    // Mostrar notificação popup
     function showNotification(msg) {
       notification.textContent = msg;
       notification.classList.add("show");
       setTimeout(() => notification.classList.remove("show"), 5000);
     }
 
-    // Buscar jogos gratuitos
     async function fetchFreeGames() {
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
@@ -149,7 +153,6 @@
         const data = await response.json();
         const elements = data?.data?.Catalog?.searchStore?.elements || [];
 
-        // Separar jogos ativos e futuros
         const ativos = elements.filter(game => {
           const discount = game.price?.totalPrice?.discountPrice === 0;
           const activePromo = game.promotions?.promotionalOffers?.length > 0;
@@ -165,12 +168,11 @@
         allGames = { ativos, futuros };
         renderGames(ativos);
 
-        // Detectar novos jogos e recarregar se necessário
         const currentTitles = ativos.map(g => g.title);
         const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
         if (lastFreeTitles.length > 0 && newTitles.length > 0) {
           showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
-          setTimeout(() => location.reload(), 3000); // 🔁 recarrega automaticamente após 3s
+          setTimeout(() => location.reload(), 3000); // recarrega página automaticamente
         }
         lastFreeTitles = currentTitles;
 
@@ -182,7 +184,6 @@
       }
     }
 
-    // Renderizar os jogos na tela
     function renderGames(games) {
       gamesGrid.innerHTML = "";
       if (games.length === 0) {
@@ -221,7 +222,7 @@
       });
     }
 
-    // Alternar entre abas
+    // Alternar abas
     tabAtivos.addEventListener("click", () => {
       tabAtivos.classList.add("active");
       tabFuturos.classList.remove("active");
@@ -236,7 +237,13 @@
 
     refreshBtn.addEventListener("click", fetchFreeGames);
 
-    // Atualização automática a cada 10 minutos
+    // Botão de reportar bug
+    reportBtn.addEventListener("click", () => {
+      const subject = encodeURIComponent("🐞 Reporte de Bug - GameAlerts");
+      const body = encodeURIComponent("Descreva o bug que você encontrou:\n\n");
+      window.location.href = `mailto:reisjuvenira468@gmail.com?subject=${subject}&body=${body}`;
+    });
+
     fetchFreeGames();
     setInterval(fetchFreeGames, 600000);
   </script>
