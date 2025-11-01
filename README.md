@@ -62,7 +62,7 @@
   <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
   <script>
-    const apiURL = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR");
+    const apiURL = "https://api.codetabs.com/v1/proxy?quest=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
     const gamesGrid = document.getElementById("gamesGrid");
     const statusText = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
@@ -93,8 +93,7 @@
       try {
         const response = await fetch(apiURL);
         if (!response.ok) throw new Error("Erro ao acessar API da Epic Games");
-        const proxyData = await response.json();
-        const data = JSON.parse(proxyData.contents);
+        const data = await response.json();
         const elements = data?.data?.Catalog?.searchStore?.elements || [];
 
         const ativos = elements.filter(game => {
@@ -116,7 +115,6 @@
         const newTitles = currentTitles.filter(t => !lastFreeTitles.includes(t));
         if (lastFreeTitles.length > 0 && newTitles.length > 0) {
           showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
-          setTimeout(() => location.reload(), 3000);
         }
         lastFreeTitles = currentTitles;
         const time = new Date().toLocaleTimeString("pt-BR");
@@ -162,10 +160,10 @@
           let diff;
           if (isAtivos && endTime) {
             diff = endTime - now;
-            countdownEl.textContent = diff <= 0 ? "⏰ Promoção terminou!" : formatDiff(diff);
+            countdownEl.textContent = diff <= 0 ? "⏰ Promoção terminada!" : formatDiff(diff);
           } else if (!isAtivos && startTime) {
             diff = startTime - now;
-            countdownEl.textContent = diff <= 0 ? "🎮 Promoção disponível agora!" : `⏳ Começa em: ${Math.ceil(diff/(1000*60*60*24))} dia(s)`;
+            countdownEl.textContent = diff <= 0 ? "🎮 Já disponível!" : `⏳ Começa em: ${Math.ceil(diff/(1000*60*60*24))} dia(s)`;
           }
         }, 1000);
         countdownIntervals.push(interval);
