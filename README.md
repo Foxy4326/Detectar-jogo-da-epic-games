@@ -1,8 +1,32 @@
+// server.js
+import express from "express";
+import fetch from "node-fetch";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// 🔹 Rota que busca os jogos gratuitos da Epic Games
+app.get("/api/freegames", async (req, res) => {
+  try {
+    const response = await fetch(
+      "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR"
+    );
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Erro ao buscar dados:", error);
+    res.status(500).json({ error: "Erro ao buscar dados da Epic Games" });
+  }
+});
+
+// 🔹 Página HTML principal
+app.get("/", (req, res) => {
+  res.send(`
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>🎮 GameAlerts — Jogos Pagos Grátis</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
@@ -62,7 +86,7 @@
   <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
   <script>
-    const apiURL = "https://api.codetabs.com/v1/proxy?quest=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
+    const apiURL = "/api/freegames";
     const gamesGrid = document.getElementById("gamesGrid");
     const statusText = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
@@ -75,12 +99,6 @@
     let allGames = { ativos: [], futuros: [] };
     let countdownIntervals = [];
 
-    function showNotification(msg) {
-      notification.textContent = msg;
-      notification.classList.add("show");
-      setTimeout(() => notification.classList.remove("show"), 5000);
-    }
-
     function updateBrazilTime() {
       const now = new Date();
       brTimeEl.textContent = "🕒 Hora Brasil: " + now.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -88,25 +106,21 @@
     setInterval(updateBrazilTime, 1000);
     updateBrazilTime();
 
+    function showNotification(msg) {
+      notification.textContent = msg;
+      notification.classList.add("show");
+      setTimeout(() => notification.classList.remove("show"), 5000);
+    }
+
     async function fetchFreeGames() {
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
         const response = await fetch(apiURL);
-        if (!response.ok) throw new Error("Erro ao acessar API da Epic Games");
         const data = await response.json();
         const elements = data?.data?.Catalog?.searchStore?.elements || [];
 
-        const ativos = elements.filter(game => {
-          const discount = game.price?.totalPrice?.discountPrice === 0;
-          const activePromo = game.promotions?.promotionalOffers?.length > 0;
-          return discount && activePromo;
-        });
-
-        const futuros = elements.filter(game => {
-          const discount = game.price?.totalPrice?.discountPrice === 0;
-          const upcomingPromo = game.promotions?.upcomingPromotionalOffers?.length > 0;
-          return discount && upcomingPromo;
-        });
+        const ativos = elements.filter(g => g.promotions?.promotionalOffers?.length > 0);
+        const futuros = elements.filter(g => g.promotions?.upcomingPromotionalOffers?.length > 0);
 
         allGames = { ativos, futuros };
         renderGames(ativos, true);
@@ -117,75 +131,87 @@
           showNotification("🎉 Novo jogo gratuito: " + newTitles.join(", "));
         }
         lastFreeTitles = currentTitles;
-        const time = new Date().toLocaleTimeString("pt-BR");
-        statusText.textContent = `✅ Atualizado às ${time}`;
+
+        statusText.textContent = "✅ Atualizado às " + new Date().toLocaleTimeString("pt-BR");
       } catch (error) {
-        console.error("Erro ao buscar dados:", error);
+        console.error("Erro:", error);
         statusText.textContent = "❌ Erro ao carregar jogos da Epic Games.";
       }
     }
 
     function renderGames(games, isAtivos) {
       gamesGrid.innerHTML = "";
-      countdownIntervals.forEach(interval => clearInterval(interval));
+      countdownIntervals.forEach(clearInterval);
       countdownIntervals = [];
-      if (games.length === 0) { gamesGrid.innerHTML = "<p class='loading'>Nenhum jogo disponível 😔</p>"; return; }
+
+      if (games.length === 0) {
+        gamesGrid.innerHTML = "<p class='loading'>Nenhum jogo disponível 😔</p>";
+        return;
+      }
 
       games.forEach(game => {
-        const image = game.keyImages?.find(img => img.type === "OfferImageWide")?.url || game.keyImages?.[0]?.url || "https://via.placeholder.com/600x400?text=Sem+Capa";
-        const originalPrice = (game.price?.totalPrice?.originalPrice / 100).toFixed(2);
-        const promo = isAtivos ? game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0] : game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0];
-        const startTime = promo?.startDate ? new Date(promo.startDate) : null;
-        const endTime = promo?.endDate ? new Date(promo.endDate) : null;
-        let pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
-        if (!pageSlug.startsWith("p/")) pageSlug = "p/" + pageSlug;
-        const gameUrl = "https://store.epicgames.com/" + pageSlug.replace(/^\/+/, "");
+        const img = game.keyImages?.find(i => i.type === "OfferImageWide")?.url || game.keyImages?.[0]?.url;
+        const price = (game.price?.totalPrice?.originalPrice / 100).toFixed(2);
+        const promo = isAtivos
+          ? game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0]
+          : game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0];
+
+        const start = promo?.startDate ? new Date(promo.startDate) : null;
+        const end = promo?.endDate ? new Date(promo.endDate) : null;
+        let slug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
+        if (!slug.startsWith("p/")) slug = "p/" + slug;
+        const url = "https://store.epicgames.com/pt-BR/" + slug.replace(/^\\/+/,"");
 
         const card = document.createElement("div");
         card.className = "game-card";
-        card.innerHTML = `
-          <img src="${image}" alt="${game.title}" class="game-image">
+        card.innerHTML = \`
+          <img src="\${img}" class="game-image" alt="\${game.title}">
           <div class="game-info">
-            <h3>${game.title}</h3>
-            <p class="original">De R$${originalPrice}</p>
+            <h3>\${game.title}</h3>
+            <p class="original">De R$\${price}</p>
             <p class="price">💥 GRÁTIS!</p>
             <div class="countdown"></div>
-            <a href="${gameUrl}" target="_blank" rel="noopener"><button class="btn mt-2">Resgatar</button></a>
-          </div>`;
-        gamesGrid.appendChild(card);
+            <a href="\${url}" target="_blank"><button class="btn mt-2">Resgatar</button></a>
+          </div>\`;
 
         const countdownEl = card.querySelector(".countdown");
         const interval = setInterval(() => {
           const now = new Date();
-          let diff;
-          if (isAtivos && endTime) {
-            diff = endTime - now;
-            countdownEl.textContent = diff <= 0 ? "⏰ Promoção terminada!" : formatDiff(diff);
-          } else if (!isAtivos && startTime) {
-            diff = startTime - now;
-            countdownEl.textContent = diff <= 0 ? "🎮 Já disponível!" : `⏳ Começa em: ${Math.ceil(diff/(1000*60*60*24))} dia(s)`;
+          if (isAtivos && end) {
+            const diff = end - now;
+            countdownEl.textContent = diff <= 0 ? "⏰ Promoção terminou!" : formatDiff(diff);
+          } else if (!isAtivos && start) {
+            const diff = start - now;
+            countdownEl.textContent = diff <= 0 ? "🎮 Disponível agora!" : \`⏳ Começa em: \${Math.ceil(diff / (1000*60*60*24))} dia(s)\`;
           }
         }, 1000);
         countdownIntervals.push(interval);
+
+        gamesGrid.appendChild(card);
       });
     }
 
     function formatDiff(ms) {
-      const totalSec = Math.floor(ms / 1000);
-      const d = Math.floor(totalSec / 86400);
-      const h = Math.floor((totalSec % 86400) / 3600);
-      const m = Math.floor((totalSec % 3600) / 60);
-      const s = totalSec % 60;
-      return `${d}d ${h}h ${m}m ${s}s`;
+      const s = Math.floor(ms / 1000);
+      const d = Math.floor(s / 86400);
+      const h = Math.floor((s % 86400) / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      return \`\${d}d \${h}h \${m}m \${sec}s\`;
     }
 
-    tabAtivos.addEventListener("click", () => { tabAtivos.classList.add("active"); tabFuturos.classList.remove("active"); renderGames(allGames.ativos, true); });
-    tabFuturos.addEventListener("click", () => { tabFuturos.classList.add("active"); tabAtivos.classList.remove("active"); renderGames(allGames.futuros, false); });
-    refreshBtn.addEventListener("click", fetchFreeGames);
-    reportBtn.addEventListener("click", () => { window.location.href = `mailto:reisjuvenira468@gmail.com?subject=${encodeURIComponent("🐞 Reporte de Bug - GameAlerts")}&body=${encodeURIComponent("Descreva o bug que você encontrou:\n\n")}`; });
+    tabAtivos.onclick = () => { tabAtivos.classList.add("active"); tabFuturos.classList.remove("active"); renderGames(allGames.ativos, true); };
+    tabFuturos.onclick = () => { tabFuturos.classList.add("active"); tabAtivos.classList.remove("active"); renderGames(allGames.futuros, false); };
+    refreshBtn.onclick = fetchFreeGames;
+    reportBtn.onclick = () => window.location.href = "mailto:reisjuvenira468@gmail.com?subject=🐞 Reporte de Bug&body=Descreva o problema:";
 
     fetchFreeGames();
     setInterval(fetchFreeGames, 600000);
   </script>
 </body>
 </html>
+`);
+});
+
+// 🔹 Inicia o servidor
+app.listen(PORT, () => console.log("🚀 Servidor rodando em http://localhost:" + PORT));
