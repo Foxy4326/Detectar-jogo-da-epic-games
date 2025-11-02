@@ -1,12 +1,12 @@
 // server.js
-import express from "express";
-import fetch from "node-fetch";
-import path from "path";
+const express = require("express");
+const fetch = require("node-fetch"); // se Node >= 18, pode usar fetch nativo
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware para servir arquivos estáticos (ícones do app)
+// Middleware para servir arquivos estáticos
 app.use(express.static("public"));
 
 // ===== API: Buscar jogos gratuitos da Epic Games =====
@@ -25,8 +25,7 @@ app.get("/api/freegames", async (req, res) => {
 
 // ===== Página principal =====
 app.get("/", (req, res) => {
-  res.send(`
-<!DOCTYPE html>
+  res.send(`<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -160,8 +159,7 @@ window.addEventListener("load", () => {
 carregarJogos();
 </script>
 </body>
-</html>
-  `);
+</html>`);
 });
 
 // ===== Manifesto para instalar o app =====
@@ -179,13 +177,11 @@ app.get("/manifest.json", (req, res) => {
 
 // ===== Página de promoção encerrada =====
 app.get("/encerrado", (req, res) => {
-  res.send(`
-  <html><body style="background:#111;color:white;text-align:center;padding:50px;font-family:sans-serif">
-  <h1>🚫 Promoção Encerrada</h1>
-  <p>Volte em breve para ver novas promoções da Epic Games!</p>
-  <a href="/" style="color:#2563eb">⬅️ Voltar</a>
-  </body></html>
-  `);
+  res.send(`<html><body style="background:#111;color:white;text-align:center;padding:50px;font-family:sans-serif">
+<h1>🚫 Promoção Encerrada</h1>
+<p>Volte em breve para ver novas promoções da Epic Games!</p>
+<a href="/" style="color:#2563eb">⬅️ Voltar</a>
+</body></html>`);
 });
 
 app.listen(PORT, () => console.log("🚀 Servidor rodando na porta " + PORT));
