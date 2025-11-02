@@ -62,7 +62,8 @@
   <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
   <script>
-    const apiURL = "https://api.codetabs.com/v1/proxy?quest=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
+    // ✅ API com proxy confiável (sem erro 404)
+    const apiURL = "https://api.allorigins.win/raw?url=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
     const gamesGrid = document.getElementById("gamesGrid");
     const statusText = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
@@ -137,9 +138,7 @@
         const promo = isAtivos ? game.promotions?.promotionalOffers?.[0]?.promotionalOffers?.[0] : game.promotions?.upcomingPromotionalOffers?.[0]?.promotionalOffers?.[0];
         const startTime = promo?.startDate ? new Date(promo.startDate) : null;
         const endTime = promo?.endDate ? new Date(promo.endDate) : null;
-        let pageSlug = game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "";
-        if (!pageSlug.startsWith("p/")) pageSlug = "p/" + pageSlug;
-        const gameUrl = "https://store.epicgames.com/" + pageSlug.replace(/^\/+/, "");
+        const gameUrl = "https://store.epicgames.com/p/" + (game.catalogNs?.mappings?.[0]?.pageSlug || game.productSlug || "");
 
         const card = document.createElement("div");
         card.className = "game-card";
@@ -150,7 +149,7 @@
             <p class="original">De R$${originalPrice}</p>
             <p class="price">💥 GRÁTIS!</p>
             <div class="countdown"></div>
-            <a href="${gameUrl}" target="_blank" rel="noopener"><button class="btn mt-2">Resgatar</button></a>
+            <a href="${gameUrl}" target="_blank"><button class="btn mt-2">Resgatar</button></a>
           </div>`;
         gamesGrid.appendChild(card);
 
