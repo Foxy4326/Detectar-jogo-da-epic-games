@@ -90,7 +90,7 @@
   <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
   <script>
-    const apiURL = "https://cdn.jsdelivr.net/gh/fawazahmed0/cors-proxy@1/docs/?url=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
+    const apiURL = "https://api.allorigins.win/raw?url=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=pt-BR";
     const gamesGrid = document.getElementById("gamesGrid");
     const statusText = document.getElementById("status");
     const refreshBtn = document.getElementById("refreshBtn");
@@ -102,25 +102,19 @@
     let allGames = { ativos: [], futuros: [] };
     let countdownIntervals = [];
 
-    function showNotification(msg) {
-      notification.textContent = msg;
-      notification.classList.add("show");
-      setTimeout(() => notification.classList.remove("show"), 5000);
-    }
-
     function updateBrazilTime() {
       const now = new Date();
       brTimeEl.textContent = "🕒 Hora Brasil: " + now.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
     }
     setInterval(updateBrazilTime, 1000);
+    updateBrazilTime();
 
     async function fetchFreeGames() {
       statusText.textContent = "🔍 Atualizando jogos gratuitos...";
       try {
         const res = await fetch(apiURL);
         if (!res.ok) throw new Error("Erro ao acessar API da Epic Games");
-        const text = await res.text();
-        const data = JSON.parse(text.replace(/^[^{]+/, ''));
+        const data = await res.json();
         const elements = data?.data?.Catalog?.searchStore?.elements || [];
 
         const ativos = elements.filter(g =>
@@ -135,8 +129,8 @@
         statusText.textContent = "✅ Atualizado com sucesso!";
       } catch (e) {
         console.error(e);
-        gamesGrid.innerHTML = "<p class='loading'>❌ Erro ao carregar jogos. A API pode estar temporariamente indisponível.</p>";
-        statusText.textContent = "⚠️ Erro ao conectar. Tente novamente em alguns minutos.";
+        gamesGrid.innerHTML = "<p class='loading'>❌ Erro ao carregar jogos. API da Epic temporariamente fora do ar.</p>";
+        statusText.textContent = "⚠️ Falha na conexão. Tente novamente mais tarde.";
       }
     }
 
