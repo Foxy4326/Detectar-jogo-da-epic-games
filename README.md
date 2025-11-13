@@ -113,7 +113,7 @@
     <script>
         // URLs da API com proxy
         const apiURLs = [
-            "https://api.allorigins.win/raw?url=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?country=BR&locale=pt-BR",
+            "https://cors-anywhere.herokuapp.com/https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?country=BR&locale=pt-BR",
         ];
 
         const gamesGrid = document.getElementById("gamesGrid");
@@ -151,47 +151,37 @@
             const timer = setTimeout(() => controller.abort(), timeout);
             try {
                 const response = await fetch(url, { signal: controller.signal });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return await response.json();
+                if (!response.ok) throw new Error("Erro ao acessar a API");
+                const data = await response.json();
+                return data;
+            } catch (err) {
+                throw err;
             } finally {
                 clearTimeout(timer);
             }
         }
 
-        // Buscar jogos gratuitos da API
+        // Carregar os jogos
         async function fetchFreeGames() {
-            statusText.textContent = "🔍 Atualizando jogos gratuitos...";
+            statusText.textContent = "Carregando jogos...";
             clearError();
-
-            let data = null;
-            let lastError = null;
-
-            // Tentar a URL da API
             try {
-                data = await tryFetch(apiURLs[0]);
-            } catch (error) {
-                lastError = error.message;
-            }
-
-            if (!data) {
-                showError(lastError || "Erro desconhecido ao buscar dados");
-                loadSampleData();
-                return;
-            }
-
-            allGames = data.data.Catalog.searchStore.elements.reduce((acc, game) => {
-                const isFree = game.price.totalPrice.discountPrice === 0;
-                if (isFree) {
-                    if (new Date(game.promotions.promotionalOffers[0].endDate) > new Date()) {
-                        acc.futuros.push(game);
-                    } else {
-                        acc.ativos.push(game);
+                const response = await tryFetch(apiURLs[0]);
+                allGames = response.data.Catalog.searchStore.elements.reduce((acc, game) => {
+                    if (game.promotions && game.promotions.promotionalOffers) {
+                        if (game.promotions.promotionalOffers[0].startDate <= new Date().toISOString()) {
+                            acc.ativos.push(game);
+                        } else {
+                            acc.futuros.push(game);
+                        }
                     }
-                }
-                return acc;
-            }, { ativos: [], futuros: [] });
-
-            renderGames();
+                    return acc;
+                }, { ativos: [], futuros: [] });
+                renderGames();
+            } catch (err) {
+                showError("Erro ao buscar jogos. Tente novamente mais tarde.");
+                loadSampleData();
+            }
         }
 
         // Exibir os jogos na tela
@@ -199,7 +189,7 @@
             const activeGames = tabAtivos.classList.contains("active") ? allGames.ativos : [];
             const upcomingGames = tabFuturos.classList.contains("active") ? allGames.futuros : [];
             const gamesToDisplay = activeGames.concat(upcomingGames);
-            
+
             gamesGrid.innerHTML = gamesToDisplay.map(game => {
                 const imageUrl = game.keyImages.find(img => img.type === 'DieselStorefrontWide').url;
                 const price = game.price.totalPrice.discountPrice === 0 ? "GRÁTIS" : game.price.totalPrice.formattedPrice;
