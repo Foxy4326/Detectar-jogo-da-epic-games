@@ -111,13 +111,12 @@
     <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
     <script>
-        // Configuração e variáveis globais
+        // URLs da API (agora com proxy CORS correto)
         const apiURLs = [
             "https://api.allorigins.win/raw?url=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?country=BR&locale=pt-BR",
-            "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?country=BR&locale=pt-BR",
             "https://corsproxy.io/?https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?country=BR&locale=pt-BR"
         ];
-        
+
         const gamesGrid = document.getElementById("gamesGrid");
         const statusText = document.getElementById("status");
         const errorContainer = document.getElementById("errorContainer");
@@ -128,7 +127,6 @@
         const tabFuturos = document.getElementById("tabFuturos");
         const brTimeEl = document.getElementById("brTime");
         let allGames = { ativos: [], futuros: [] };
-        let countdownIntervals = [];
 
         // Atualizar hora do Brasil
         function updateBrazilTime() {
@@ -173,19 +171,14 @@
             for (const url of apiURLs) {
                 try {
                     data = await tryFetch(url);
-                    break; // Se funcionou, para de tentar
+                    break;
                 } catch (error) {
-                    lastError = error;
-                    continue; // Continua para a próxima URL
+                    lastError = error.message;
                 }
             }
 
             if (!data) {
-                const errorMsg = "❌ Erro 404: não foi possível conectar à Epic Games. Tentando carregar dados de exemplo...";
-                showError(errorMsg);
-                statusText.textContent = errorMsg;
-                
-                // Carregar dados de exemplo (fallback)
+                showError(lastError || "Erro desconhecido ao buscar dados");
                 loadSampleData();
                 return;
             }
