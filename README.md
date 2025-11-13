@@ -111,10 +111,9 @@
     <div class="notification" id="notification">Novo jogo gratuito detectado!</div>
 
     <script>
-        // URLs da API (agora com proxy CORS correto)
+        // URLs da API com proxy
         const apiURLs = [
             "https://api.allorigins.win/raw?url=https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?country=BR&locale=pt-BR",
-            "https://corsproxy.io/?https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?country=BR&locale=pt-BR"
         ];
 
         const gamesGrid = document.getElementById("gamesGrid");
@@ -146,7 +145,7 @@
             errorContainer.innerHTML = '';
         }
 
-        // Tentar diferentes APIs até uma funcionar (com timeout)
+        // Tentar buscar dados da API
         async function tryFetch(url, timeout = 7000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeout);
@@ -163,18 +162,15 @@
         async function fetchFreeGames() {
             statusText.textContent = "🔍 Atualizando jogos gratuitos...";
             clearError();
-            
+
             let data = null;
             let lastError = null;
 
-            // Tentar cada URL até uma funcionar
-            for (const url of apiURLs) {
-                try {
-                    data = await tryFetch(url);
-                    break;
-                } catch (error) {
-                    lastError = error.message;
-                }
+            // Tentar a URL da API
+            try {
+                data = await tryFetch(apiURLs[0]);
+            } catch (error) {
+                lastError = error.message;
             }
 
             if (!data) {
